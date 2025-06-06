@@ -181,11 +181,6 @@
             </div>
           {/if}
         </div>
-      {:else}
-        <!-- Login button for non-authenticated users -->
-        <a href="#/login" class="btn btn-primary">
-          Login
-        </a>
       {/if}
     </div>
   </div>
