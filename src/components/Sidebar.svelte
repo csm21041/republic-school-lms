@@ -7,7 +7,8 @@
     MessageCircle, 
     HelpCircle, 
     Settings, 
-    User 
+    User,
+    CreditCard
   } from 'lucide-svelte';
   import { currentUser } from '../stores/auth';
 
@@ -21,6 +22,7 @@
     { href: '#/calendar', label: 'Calendar', icon: Calendar },
     { href: '#/chat', label: 'Chat', icon: MessageCircle },
     { href: '#/doubts', label: 'Doubts', icon: HelpCircle },
+    { href: '#/payments', label: 'Payments', icon: CreditCard },
     { href: '#/settings', label: 'Settings', icon: Settings }
   ];
 

@@ -8,6 +8,7 @@ import Calendar from './pages/Calendar.svelte';
 import Chat from './pages/Chat.svelte';
 import Doubts from './pages/Doubts.svelte';
 import Settings from './pages/Settings.svelte';
+import Payments from './pages/Payments.svelte';
 import Login from './pages/Login.svelte';
 
 export const routes = {
@@ -22,4 +23,5 @@ export const routes = {
   '/chat': Chat,
   '/doubts': Doubts,
   '/settings': Settings,
+  '/payments': Payments,
 };
