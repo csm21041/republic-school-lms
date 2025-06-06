@@ -10,9 +10,13 @@
     User,
     CreditCard
   } from 'lucide-svelte';
-  import { currentUser } from '../stores/auth';
+  import { useAuthStore } from '../stores/auth';
 
   export let isOpen = false;
+  
+  // Get auth state from Zustand store
+  $: authState = useAuthStore();
+  $: currentUser = authState.user;
 
   const navItems = [
     { href: '#/dashboard', label: 'Dashboard', icon: Home },
@@ -54,16 +58,16 @@
     <div class="p-6 border-b border-gray-100">
       <div class="flex items-center space-x-3">
         <img 
-          src={$currentUser?.avatar} 
-          alt={$currentUser?.name}
+          src={currentUser?.avatar} 
+          alt={currentUser?.name}
           class="w-12 h-12 rounded-full object-cover"
         />
         <div class="flex-1 min-w-0">
-          <h3 class="text-sm font-semibold text-gray-900 truncate">{$currentUser?.name}</h3>
-          <p class="text-xs text-gray-500 truncate">{$currentUser?.email}</p>
+          <h3 class="text-sm font-semibold text-gray-900 truncate">{currentUser?.name}</h3>
+          <p class="text-xs text-gray-500 truncate">{currentUser?.email}</p>
           <div class="flex items-center space-x-4 mt-1">
-            <span class="text-xs text-gray-400">{$currentUser?.enrolledCourses?.length || 0} courses</span>
-            <span class="text-xs text-primary-600">{$currentUser?.completedCourses?.length || 0} completed</span>
+            <span class="text-xs text-gray-400">{currentUser?.enrolledCourses?.length || 0} courses</span>
+            <span class="text-xs text-primary-600">{currentUser?.completedCourses?.length || 0} completed</span>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Menu, Search, Bell, User, LogOut } from 'lucide-svelte';
-  import { currentUser, isAuthenticated, logout } from '../stores/auth';
+  import { useAuthStore } from '../stores/auth';
   import { push } from 'svelte-spa-router';
 
   const dispatch = createEventDispatcher();
@@ -9,13 +9,18 @@
   let searchQuery = '';
   let showProfileMenu = false;
   let showNotifications = false;
+  
+  // Get auth state from Zustand store
+  $: authState = useAuthStore();
+  $: currentUser = authState.user;
+  $: isAuthenticated = authState.isAuthenticated;
 
   function handleSearch() {
     console.log('Searching for:', searchQuery);
   }
 
   function handleLogout() {
-    logout();
+    useAuthStore.getState().logout();
     push('/');
   }
 
@@ -44,7 +49,7 @@
   <div class="flex items-center justify-between">
     <!-- Left side -->
     <div class="flex items-center space-x-4">
-      {#if $isAuthenticated}
+      {#if isAuthenticated}
         <button
           class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
           on:click={() => dispatch('toggleSidebar')}
@@ -67,7 +72,7 @@
     </div>
 
     <!-- Center - Search (only when authenticated) -->
-    {#if $isAuthenticated}
+    {#if isAuthenticated}
       <div class="hidden md:flex flex-1 max-w-md mx-8">
         <div class="relative w-full">
           <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -84,7 +89,7 @@
 
     <!-- Right side -->
     <div class="flex items-center space-x-2">
-      {#if $isAuthenticated}
+      {#if isAuthenticated}
         <!-- Mobile search -->
         <button
           class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
@@ -137,12 +142,12 @@
             aria-label="Profile menu"
           >
             <img 
-              src={$currentUser?.avatar} 
-              alt={$currentUser?.name}
+              src={currentUser?.avatar} 
+              alt={currentUser?.name}
               class="w-8 h-8 rounded-full object-cover"
             />
             <span class="hidden md:block text-sm font-medium text-gray-700 max-w-24 truncate">
-              {$currentUser?.name}
+              {currentUser?.name}
             </span>
           </button>
 
@@ -151,13 +156,13 @@
               <div class="p-4 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
                   <img 
-                    src={$currentUser?.avatar} 
-                    alt={$currentUser?.name}
+                    src={currentUser?.avatar} 
+                    alt={currentUser?.name}
                     class="w-10 h-10 rounded-full object-cover"
                   />
                   <div>
-                    <p class="font-medium text-gray-900">{$currentUser?.name}</p>
-                    <p class="text-sm text-gray-500">{$currentUser?.email}</p>
+                    <p class="font-medium text-gray-900">{currentUser?.name}</p>
+                    <p class="text-sm text-gray-500">{currentUser?.email}</p>
                   </div>
                 </div>
               </div>
