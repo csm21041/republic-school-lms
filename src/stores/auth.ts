@@ -54,8 +54,32 @@ const mockUser: User = {
   location: 'New York, NY'
 };
 
-export const currentUser = writable<User | null>(null);
-export const isAuthenticated = writable<boolean>(false);
+// Initialize stores with values from localStorage if available
+function getInitialUser(): User | null {
+  if (typeof window !== 'undefined') {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }
+  return null;
+}
+
+function getInitialAuthState(): boolean {
+  if (typeof window !== 'undefined') {
+    const savedUser = localStorage.getItem('currentUser');
+    return !!savedUser;
+  }
+  return false;
+}
+
+export const currentUser = writable<User | null>(getInitialUser());
+export const isAuthenticated = writable<boolean>(getInitialAuthState());
 
 export function login(email: string, password: string): boolean {
   // Mock login - in real app, this would make an API call
@@ -72,5 +96,4 @@ export function logout(): void {
   currentUser.set(null);
   isAuthenticated.set(false);
   localStorage.removeItem('currentUser');
-  push('/login');
 }
