@@ -1,4 +1,3 @@
-import Home from './pages/Home.svelte';
 import Dashboard from './pages/Dashboard.svelte';
 import Profile from './pages/Profile.svelte';
 import Courses from './pages/Courses.svelte';
@@ -12,7 +11,7 @@ import Payments from './pages/Payments.svelte';
 import Login from './pages/Login.svelte';
 
 export const routes = {
-  '/': Home,
+  '/': Login,
   '/login': Login,
   '/dashboard': Dashboard,
   '/profile': Profile,

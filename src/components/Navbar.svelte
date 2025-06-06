@@ -55,7 +55,7 @@
       {/if}
 
       <!-- Logo -->
-      <a href="#/" class="flex items-center space-x-3">
+      <a href="#/dashboard" class="flex items-center space-x-3">
         <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
           <span class="text-white font-bold text-xl">R</span>
         </div>

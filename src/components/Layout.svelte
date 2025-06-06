@@ -13,7 +13,7 @@
   onMount(() => {
     // Redirect to login if not authenticated and not on home page
     const unsubscribe = isAuthenticated.subscribe(authenticated => {
-      if (!authenticated && window.location.hash !== '#/' && window.location.hash !== '#/login') {
+      if (!authenticated && window.location.hash !== '#/login') {
         push('/login');
       }
     });

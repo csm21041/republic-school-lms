@@ -72,4 +72,5 @@ export function logout(): void {
   currentUser.set(null);
   isAuthenticated.set(false);
   localStorage.removeItem('currentUser');
+  push('/login');
 }
