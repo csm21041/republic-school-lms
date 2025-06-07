@@ -11,18 +11,15 @@
   let sidebarOpen = false;
 
   onMount(() => {
-    // Redirect to login if not authenticated and not on home page
-    if (!$isAuthenticated && window.location.hash !== '#/login') {
-      push('/login');
-    }
+    // Redirect to login if not authenticated and not on login page
+    const unsubscribe = isAuthenticated.subscribe(auth => {
+      if (!auth && window.location.hash !== '#/login' && window.location.hash !== '#/') {
+        push('/login');
+      }
+    });
+
+    return unsubscribe;
   });
-  
-  // Watch for auth state changes and redirect if needed
-  $: {
-    if (!$isAuthenticated && window.location.hash !== '#/login') {
-      push('/login');
-    }
-  }
 
   function toggleSidebar() {
     sidebarOpen = !sidebarOpen;

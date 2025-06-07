@@ -1,6 +1,4 @@
 import { writable } from 'svelte/store';
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface User {
   id: string;
@@ -28,14 +26,6 @@ export interface Achievement {
   icon: string;
   earnedDate: string;
   certificateUrl?: string;
-}
-
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
-  setUser: (user: User) => void;
 }
 
 const mockUser: User = {
@@ -72,60 +62,66 @@ const mockUser: User = {
   studentId: 'JOUR2024001'
 };
 
-// Zustand store with persistence
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
-      login: (email: string, password: string) => {
-        // Mock login - in real app, this would make an API call
-        if (email && password) {
-          set({ user: mockUser, isAuthenticated: true });
-          return true;
-        }
-        return false;
-      },
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
-      },
-      setUser: (user: User) => {
-        set({ user, isAuthenticated: true });
-      },
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated 
-      }),
-    }
-  )
-);
-
-// Svelte stores for reactive components (derived from Zustand)
+// Create writable stores
 export const currentUser = writable<User | null>(null);
 export const isAuthenticated = writable<boolean>(false);
 
-// Sync Zustand with Svelte stores
-if (typeof window !== 'undefined') {
-  useAuthStore.subscribe((state) => {
-    currentUser.set(state.user);
-    isAuthenticated.set(state.isAuthenticated);
-  });
+// Check if we're in the browser
+const isBrowser = typeof window !== 'undefined';
+
+// Initialize from localStorage if in browser
+if (isBrowser) {
+  const storedUser = localStorage.getItem('currentUser');
+  const storedAuth = localStorage.getItem('isAuthenticated');
   
-  // Initialize Svelte stores with current Zustand state
-  const initialState = useAuthStore.getState();
-  currentUser.set(initialState.user);
-  isAuthenticated.set(initialState.isAuthenticated);
+  if (storedUser && storedAuth === 'true') {
+    try {
+      const user = JSON.parse(storedUser);
+      currentUser.set(user);
+      isAuthenticated.set(true);
+    } catch (error) {
+      console.error('Error parsing stored user:', error);
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('isAuthenticated');
+    }
+  }
 }
 
-// Legacy functions for backward compatibility
+// Subscribe to changes and update localStorage
+if (isBrowser) {
+  currentUser.subscribe(user => {
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  });
+
+  isAuthenticated.subscribe(auth => {
+    localStorage.setItem('isAuthenticated', auth.toString());
+  });
+}
+
+// Authentication functions
 export function login(email: string, password: string): boolean {
-  return useAuthStore.getState().login(email, password);
+  // Mock login - in real app, this would make an API call
+  if (email && password) {
+    currentUser.set(mockUser);
+    isAuthenticated.set(true);
+    return true;
+  }
+  return false;
 }
 
 export function logout(): void {
-  useAuthStore.getState().logout();
+  currentUser.set(null);
+  isAuthenticated.set(false);
+  if (isBrowser) {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('isAuthenticated');
+  }
+}
+
+export function updateUser(user: User): void {
+  currentUser.set(user);
 }

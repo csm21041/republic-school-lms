@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useAuthStore } from '../stores/auth';
+  import { login } from '../stores/auth';
   import { push } from 'svelte-spa-router';
   import { Eye, EyeOff, Mail, Lock } from 'lucide-svelte';
   import Layout from '../components/Layout.svelte';
@@ -22,7 +22,7 @@
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const success = useAuthStore.getState().login(email, password);
+    const success = login(email, password);
     
     if (success) {
       push('/dashboard');

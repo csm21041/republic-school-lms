@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Menu, Search, Bell, User, LogOut } from 'lucide-svelte';
-  import { useAuthStore, currentUser, isAuthenticated } from '../stores/auth';
+  import { currentUser, isAuthenticated, logout } from '../stores/auth';
   import { push } from 'svelte-spa-router';
 
   const dispatch = createEventDispatcher();
@@ -15,8 +15,8 @@
   }
 
   function handleLogout() {
-    useAuthStore.getState().logout();
-    push('/');
+    logout();
+    push('/login');
   }
 
   function toggleProfileMenu() {
@@ -55,7 +55,7 @@
       {/if}
 
       <!-- Logo -->
-      <a href="#/dashboard" class="flex items-center space-x-3">
+      <a href={$isAuthenticated ? "#/dashboard" : "#/"} class="flex items-center space-x-3">
         <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
           <span class="text-white font-bold text-xl">R</span>
         </div>
@@ -181,6 +181,11 @@
             </div>
           {/if}
         </div>
+      {:else}
+        <!-- Login button for non-authenticated users -->
+        <a href="#/login" class="btn btn-primary">
+          Sign In
+        </a>
       {/if}
     </div>
   </div>
