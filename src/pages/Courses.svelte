@@ -216,11 +216,11 @@
     {#each Object.entries(coursesByYear) as [yearLevel, yearCourses]}
       <div class="card p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">{yearLevel} Courses</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
           {#each yearCourses as course}
-            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+            <div class="border border-gray-200 rounded-lg p-4 md:p-6 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
               <!-- Course Header -->
-              <div class="flex items-start justify-between mb-3">
+              <div class="flex items-start justify-between mb-4">
                 <div class="flex-1">
                   <div class="flex items-center space-x-2 mb-2">
                     <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
@@ -230,16 +230,16 @@
                       {course.status}
                     </span>
                   </div>
-                  <h3 class="font-semibold text-gray-900 mb-1">{course.title}</h3>
-                  <p class="text-sm text-gray-600 mb-2 line-clamp-2">{course.description}</p>
+                  <h3 class="font-semibold text-gray-900 mb-2 text-base md:text-lg leading-tight">{course.title}</h3>
+                  <p class="text-sm text-gray-600 mb-3 line-clamp-2 md:line-clamp-3">{course.description}</p>
                 </div>
               </div>
               
               <!-- Course Details -->
-              <div class="space-y-2 mb-4">
+              <div class="space-y-2 mb-4 flex-grow">
                 <div class="flex items-center justify-between text-sm">
                   <span class="text-gray-600">Instructor:</span>
-                  <span class="font-medium text-gray-900">{course.instructor}</span>
+                  <span class="font-medium text-gray-900 text-right max-w-32 truncate">{course.instructor}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                   <span class="text-gray-600">Credits:</span>
@@ -252,7 +252,7 @@
                 {#if course.schedule}
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-gray-600">Schedule:</span>
-                    <span class="font-medium text-gray-900">{course.schedule.days.join(', ')}</span>
+                    <span class="font-medium text-gray-900 text-right max-w-32 truncate">{course.schedule.days.join(', ')}</span>
                   </div>
                   <div class="flex items-center justify-between text-sm">
                     <span class="text-gray-600">Time:</span>
@@ -277,24 +277,24 @@
                 </div>
               {/if}
               
-              <!-- Action Button -->
-              <div class="flex space-x-2">
+              <!-- Action Button - Always at bottom -->
+              <div class="flex space-x-2 mt-auto">
                 {#if course.status === 'Current'}
-                  <a href="#/courses/{course.id}" class="flex-1 btn btn-primary text-sm py-2 flex items-center justify-center space-x-2">
+                  <a href="#/courses/{course.id}" class="flex-1 btn btn-primary text-sm py-2.5 flex items-center justify-center space-x-2">
                     <Play class="w-4 h-4" />
                     <span>Continue</span>
                   </a>
                 {:else if course.status === 'Completed'}
-                  <a href="#/courses/{course.id}" class="flex-1 btn btn-secondary text-sm py-2 flex items-center justify-center space-x-2">
+                  <a href="#/courses/{course.id}" class="flex-1 btn btn-secondary text-sm py-2.5 flex items-center justify-center space-x-2">
                     <CheckCircle class="w-4 h-4" />
                     <span>Review</span>
                   </a>
                 {:else if course.status === 'Upcoming'}
-                  <button class="flex-1 btn btn-secondary text-sm py-2 opacity-60 cursor-not-allowed">
+                  <button class="flex-1 btn btn-secondary text-sm py-2.5 opacity-60 cursor-not-allowed">
                     Starts {course.semester} {course.academicYear}
                   </button>
                 {:else}
-                  <a href="#/courses/{course.id}" class="flex-1 btn btn-secondary text-sm py-2">
+                  <a href="#/courses/{course.id}" class="flex-1 btn btn-secondary text-sm py-2.5">
                     View Details
                   </a>
                 {/if}
@@ -302,7 +302,7 @@
               
               <!-- Prerequisites (if any) -->
               {#if course.syllabus && course.syllabus.length > 0}
-                <div class="mt-3 pt-3 border-t border-gray-100">
+                <div class="mt-4 pt-3 border-t border-gray-100">
                   <p class="text-xs text-gray-500 mb-1">Course Topics:</p>
                   <div class="flex flex-wrap gap-1">
                     {#each course.syllabus.slice(0, 3) as topic}
