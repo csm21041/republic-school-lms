@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { BookOpen, FileText, Calendar as CalendarIcon, TrendingUp, Clock, Award } from 'lucide-svelte';
+  import { BookOpen, FileText, Calendar as CalendarIcon, TrendingUp, Clock, Award, Users, CheckSquare, BarChart3 } from 'lucide-svelte';
   import Layout from '../components/Layout.svelte';
   import { courses } from '../stores/courses';
   import { assignments } from '../stores/assignments';
