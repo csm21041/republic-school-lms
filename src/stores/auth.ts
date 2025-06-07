@@ -15,6 +15,10 @@ export interface User {
   bio?: string;
   phone?: string;
   location?: string;
+  department: string;
+  semester: string;
+  academicYear: string;
+  studentId: string;
 }
 
 export interface Achievement {
@@ -61,7 +65,11 @@ const mockUser: User = {
   joinDate: '2024-01-01',
   bio: 'Aspiring journalist passionate about investigative reporting and digital media.',
   phone: '+1 (555) 123-4567',
-  location: 'New York, NY'
+  location: 'New York, NY',
+  department: 'Journalism',
+  semester: 'Spring',
+  academicYear: '2024',
+  studentId: 'JOUR2024001'
 };
 
 // Zustand store with persistence

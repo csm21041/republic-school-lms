@@ -6,10 +6,14 @@
   let searchQuery = '';
   let selectedCategory = 'All';
   let selectedLevel = 'All';
+  let selectedDepartment = 'All';
+  let selectedSemester = 'All';
   let sortBy = 'popular';
 
   const categories = ['All', 'Digital Media', 'Investigative', 'Broadcast', 'Data Journalism', 'Ethics'];
   const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+  const departments = ['All', 'Journalism', 'Communications', 'Media Studies', 'Digital Arts'];
+  const semesters = ['All', 'Spring', 'Summer', 'Fall', 'Winter'];
   const sortOptions = [
     { value: 'popular', label: 'Most Popular' },
     { value: 'rating', label: 'Highest Rated' },
@@ -24,8 +28,10 @@
                          course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
     const matchesLevel = selectedLevel === 'All' || course.level === selectedLevel;
+    const matchesDepartment = selectedDepartment === 'All' || course.department === selectedDepartment;
+    const matchesSemester = selectedSemester === 'All' || course.semester === selectedSemester;
     
-    return matchesSearch && matchesCategory && matchesLevel;
+    return matchesSearch && matchesCategory && matchesLevel && matchesDepartment && matchesSemester;
   }).sort((a, b) => {
     switch (sortBy) {
       case 'rating':
@@ -80,7 +86,7 @@
 
     <!-- Filters and Search -->
     <div class="card p-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
         <!-- Search -->
         <div class="lg:col-span-2">
           <div class="relative">
@@ -114,6 +120,30 @@
           >
             {#each levels as level}
               <option value={level}>{level}</option>
+            {/each}
+          </select>
+        </div>
+
+        <!-- Department Filter -->
+        <div>
+          <select 
+            bind:value={selectedDepartment}
+            class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            {#each departments as department}
+              <option value={department}>{department}</option>
+            {/each}
+          </select>
+        </div>
+
+        <!-- Semester Filter -->
+        <div>
+          <select 
+            bind:value={selectedSemester}
+            class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            {#each semesters as semester}
+              <option value={semester}>{semester}</option>
             {/each}
           </select>
         </div>
@@ -161,6 +191,11 @@
               <h3 class="font-bold text-lg text-gray-900 line-clamp-2">{course.title}</h3>
             </div>
             
+            <div class="flex items-center space-x-2 mb-2">
+              <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">{course.courseCode}</span>
+              <span class="px-2 py-1 bg-blue-100 text-blue-600 text-xs rounded-full">{course.credits} credits</span>
+            </div>
+            
             <p class="text-gray-600 text-sm mb-3 line-clamp-2">{course.description}</p>
             
             <div class="flex items-center space-x-2 mb-3">
@@ -188,6 +223,14 @@
                 </div>
               </div>
             </div>
+            
+            {#if course.schedule}
+              <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <div class="text-xs text-gray-600 mb-1">Schedule</div>
+                <div class="text-sm font-medium text-gray-900">{course.schedule.days.join(', ')}</div>
+                <div class="text-xs text-gray-600">{course.schedule.time} • {course.schedule.venue}</div>
+              </div>
+            {/if}
             
             {#if course.isEnrolled}
               <div class="mb-4">
