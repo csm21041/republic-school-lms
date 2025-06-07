@@ -12,8 +12,7 @@
     Users,
     CheckSquare,
     BarChart3,
-    MessageSquare,
-    GraduationCap
+    MessageSquare
   } from 'lucide-svelte';
   import { currentUser } from '../stores/auth';
 
@@ -32,7 +31,6 @@
     { href: '#/doubts', label: 'Doubts', icon: HelpCircle },
     { href: '#/feedback', label: 'Feedback', icon: MessageSquare },
     { href: '#/payments', label: 'Payments', icon: CreditCard },
-    { href: '#/academic-plan', label: 'Academic Plan', icon: GraduationCap },
     { href: '#/settings', label: 'Settings', icon: Settings }
   ];
 

@@ -14,7 +14,6 @@ import Attendance from './pages/Attendance.svelte';
 import Grades from './pages/Grades.svelte';
 import Feedback from './pages/Feedback.svelte';
 import Login from './pages/Login.svelte';
-import AcademicPlan from './pages/AcademicPlan.svelte';
 
 export const routes = {
   '/': Login,
@@ -34,5 +33,4 @@ export const routes = {
   '/attendance': Attendance,
   '/grades': Grades,
   '/feedback': Feedback,
-  '/academic-plan': AcademicPlan,
 };
