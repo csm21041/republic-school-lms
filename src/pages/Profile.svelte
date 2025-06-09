@@ -98,21 +98,34 @@
 
   function toggleEdit() {
     if (isEditing) {
-      // Save changes
-      const updatedUser = {
-        ...$currentUser,
-        name: `${profileData.firstName} ${profileData.lastName}`,
-        email: profileData.email,
-        phone: profileData.phone
-      };
-      currentUser.set(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      localStorage.setItem('profileData', JSON.stringify(profileData));
+      saveProfileData();
     } else {
       // Start editing
       editedUser = { ...$currentUser };
     }
     isEditing = !isEditing;
+  }
+
+  function saveProfileData() {
+    try {
+      // Update user data
+      const updatedUser = {
+        ...$currentUser,
+        name: `${profileData.firstName} ${profileData.lastName}`.trim(),
+        email: profileData.email,
+        phone: profileData.phone,
+        bio: profileData.bio || `${profileData.courseInterest ? 'Interested in ' + profileData.courseInterest : 'Journalism student'}`
+      };
+      
+      // Save to stores and localStorage
+      currentUser.set(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      localStorage.setItem('profileData', JSON.stringify(profileData));
+      
+      console.log('Profile data saved successfully!');
+    } catch (error) {
+      console.error('Error saving profile data:', error);
+    }
   }
 
   function cancelEdit() {
@@ -148,18 +161,6 @@
       try {
         const parsed = JSON.parse(savedProfile);
         profileData = { ...profileData, ...parsed };
-        
-        // Update user data if profile data exists
-        if (parsed.firstName && parsed.lastName) {
-          const updatedUser = {
-            ...$currentUser,
-            name: `${parsed.firstName} ${parsed.lastName}`,
-            email: parsed.email || $currentUser?.email,
-            phone: parsed.phone || $currentUser?.phone,
-            bio: parsed.bio || $currentUser?.bio
-          };
-          currentUser.set(updatedUser);
-        }
       } catch (error) {
         console.error('Error loading profile data:', error);
       }
@@ -195,6 +196,7 @@
   }
 
   $: profileCompletion = calculateProfileCompletion();
+  $: hasProfileData = profileData.firstName && profileData.lastName && profileData.email;
 
   const states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
@@ -348,7 +350,7 @@
               <X class="w-4 h-4" />
               <span>Cancel</span>
             </button>
-          {:else if profileCompletion < 100}
+          {:else if !hasProfileData}
             <button 
               on:click={loadSampleData}
               class="btn btn-secondary flex items-center space-x-2 mr-2"
@@ -375,7 +377,7 @@
       </div>
       
       <!-- Profile Completion Progress -->
-      {#if profileCompletion < 100}
+      {#if !hasProfileData || profileCompletion < 100}
         <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-blue-900">Profile Completion</span>
@@ -731,449 +733,3 @@
                   bind:value={profileData.education.graduationYear}
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
-              </div>
-            </div>
-          </div>
-
-          <!-- Post Graduation -->
-          <div>
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Post Graduation (if applicable)</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">University/College</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.postGraduationUniversity}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Degree</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.postGraduationDegree}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Percentage/CGPA</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.postGraduationPercentage}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Year of Passing</label>
-                <input
-                  type="number"
-                  bind:value={profileData.education.postGraduationYear}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Professional Information -->
-        <div class="card p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Professional Information</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Work Experience</label>
-              <select
-                bind:value={profileData.workExperience}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Select Experience</option>
-                <option value="fresher">Fresher</option>
-                <option value="0-1">0-1 years</option>
-                <option value="1-3">1-3 years</option>
-                <option value="3-5">3-5 years</option>
-                <option value="5+">5+ years</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Current Employment Status</label>
-              <select
-                bind:value={profileData.currentEmployment}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Select Status</option>
-                <option value="employed">Employed</option>
-                <option value="unemployed">Unemployed</option>
-                <option value="student">Student</option>
-                <option value="freelancer">Freelancer</option>
-                <option value="entrepreneur">Entrepreneur</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Organization/Company</label>
-              <input
-                type="text"
-                bind:value={profileData.organization}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Designation</label>
-              <input
-                type="text"
-                bind:value={profileData.designation}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Course Information -->
-        <div class="card p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Course Information</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Course Interest</label>
-              <select
-                bind:value={profileData.courseInterest}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Select Course</option>
-                <option value="diploma-journalism">Diploma in Journalism</option>
-                <option value="digital-journalism">Digital Journalism</option>
-                <option value="broadcast-journalism">Broadcast Journalism</option>
-                <option value="investigative-journalism">Investigative Journalism</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Learning Goals</label>
-              <textarea
-                bind:value={profileData.learningGoals}
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                placeholder="What do you hope to achieve from this course?"
-              ></textarea>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Schedule</label>
-              <select
-                bind:value={profileData.preferredSchedule}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Select Schedule</option>
-                <option value="weekdays">Weekdays</option>
-                <option value="weekends">Weekends</option>
-                <option value="evening">Evening Classes</option>
-                <option value="flexible">Flexible</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Technical Skills</label>
-              <textarea
-                bind:value={profileData.technicalSkills}
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                placeholder="List any relevant technical skills (e.g., video editing, photography, etc.)"
-              ></textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Additional Information -->
-        <div class="card p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Additional Information</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Languages Known</label>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {#each languages as language}
-                  <label class="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      value={language}
-                      bind:group={profileData.languagesKnown}
-                      class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <span class="text-sm text-gray-700">{language}</span>
-                  </label>
-                {/each}
-              </div>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Hobbies & Interests</label>
-              <textarea
-                bind:value={profileData.hobbies}
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              ></textarea>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Achievements & Awards</label>
-              <textarea
-                bind:value={profileData.achievements}
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              ></textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Emergency Contact -->
-        <div class="card p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Emergency Contact</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-              <input
-                type="text"
-                bind:value={profileData.emergencyContact.name}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Relationship *</label>
-              <input
-                type="text"
-                bind:value={profileData.emergencyContact.relationship}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-              <input
-                type="tel"
-                bind:value={profileData.emergencyContact.phone}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <input
-                type="email"
-                bind:value={profileData.emergencyContact.email}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Document Upload -->
-        <div class="card p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Document Upload</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Passport Size Photo *</label>
-              <input
-                type="file"
-                accept="image/*"
-                on:change={(e) => handleFileUpload(e, 'photo')}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">10th Certificate *</label>
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                on:change={(e) => handleFileUpload(e, 'tenthCertificate')}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">12th Certificate *</label>
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                on:change={(e) => handleFileUpload(e, 'twelfthCertificate')}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Graduation Certificate</label>
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                on:change={(e) => handleFileUpload(e, 'graduationCertificate')}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Experience Letter</label>
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                on:change={(e) => handleFileUpload(e, 'experienceLetter')}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">ID Proof (Aadhar/PAN/Passport) *</label>
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                on:change={(e) => handleFileUpload(e, 'idProof')}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    {:else}
-      <!-- View Mode - Stats and Summary -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="card p-6 text-center">
-          <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <BookOpen class="w-6 h-6 text-primary-600" />
-          </div>
-          <div class="text-2xl font-bold text-gray-900">{enrolledCourses.length}</div>
-          <div class="text-sm text-gray-600">Enrolled Courses</div>
-        </div>
-        
-        <div class="card p-6 text-center">
-          <div class="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <Trophy class="w-6 h-6 text-success-600" />
-          </div>
-          <div class="text-2xl font-bold text-gray-900">{completedCourses.length}</div>
-          <div class="text-sm text-gray-600">Completed Courses</div>
-        </div>
-        
-        <div class="card p-6 text-center">
-          <div class="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <Award class="w-6 h-6 text-warning-600" />
-          </div>
-          <div class="text-2xl font-bold text-gray-900">{$currentUser?.achievements?.length || 0}</div>
-          <div class="text-sm text-gray-600">Achievements</div>
-        </div>
-        
-        <div class="card p-6 text-center">
-          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <div class="text-blue-600 font-bold text-lg">{totalProgress}%</div>
-          </div>
-          <div class="text-2xl font-bold text-gray-900">Progress</div>
-          <div class="text-sm text-gray-600">Average</div>
-        </div>
-      </div>
-
-      {#if profileCompletion >= 100}
-        <!-- Completed Profile Information -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Personal Information -->
-          <div class="card p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Personal Information</h2>
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-gray-600">Full Name:</span>
-                <span class="font-medium">{profileData.firstName} {profileData.lastName}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Email:</span>
-                <span class="font-medium">{profileData.email}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Phone:</span>
-                <span class="font-medium">{profileData.phone}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Date of Birth:</span>
-                <span class="font-medium">{new Date(profileData.dateOfBirth).toLocaleDateString()}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Gender:</span>
-                <span class="font-medium capitalize">{profileData.gender}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Address Information -->
-          <div class="card p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Address Information</h2>
-            <div class="space-y-4">
-              <div>
-                <h3 class="font-semibold text-gray-800 mb-2">Current Address</h3>
-                <p class="text-gray-600 text-sm">
-                  {profileData.currentAddress.street}<br>
-                  {profileData.currentAddress.city}, {profileData.currentAddress.state}<br>
-                  {profileData.currentAddress.pincode}, {profileData.currentAddress.country}
-                </p>
-              </div>
-              {#if !profileData.sameAsCurrent}
-                <div>
-                  <h3 class="font-semibold text-gray-800 mb-2">Permanent Address</h3>
-                  <p class="text-gray-600 text-sm">
-                    {profileData.permanentAddress.street}<br>
-                    {profileData.permanentAddress.city}, {profileData.permanentAddress.state}<br>
-                    {profileData.permanentAddress.pincode}, {profileData.permanentAddress.country}
-                  </p>
-                </div>
-              {/if}
-            </div>
-          </div>
-
-          <!-- Educational Background -->
-          <div class="card p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Educational Background</h2>
-            <div class="space-y-4">
-              <div>
-                <h3 class="font-semibold text-gray-800">10th Standard</h3>
-                <p class="text-gray-600 text-sm">{profileData.education.tenthBoard} - {profileData.education.tenthPercentage} ({profileData.education.tenthYear})</p>
-              </div>
-              <div>
-                <h3 class="font-semibold text-gray-800">12th Standard</h3>
-                <p class="text-gray-600 text-sm">{profileData.education.twelfthBoard} - {profileData.education.twelfthPercentage} ({profileData.education.twelfthYear})</p>
-              </div>
-              {#if profileData.education.graduationDegree}
-                <div>
-                  <h3 class="font-semibold text-gray-800">Graduation</h3>
-                  <p class="text-gray-600 text-sm">{profileData.education.graduationDegree} from {profileData.education.graduationUniversity}</p>
-                  <p class="text-gray-600 text-sm">{profileData.education.graduationPercentage} ({profileData.education.graduationYear})</p>
-                </div>
-              {/if}
-              {#if profileData.education.postGraduationDegree}
-                <div>
-                  <h3 class="font-semibold text-gray-800">Post Graduation</h3>
-                  <p class="text-gray-600 text-sm">{profileData.education.postGraduationDegree} from {profileData.education.postGraduationUniversity}</p>
-                  <p class="text-gray-600 text-sm">{profileData.education.postGraduationPercentage} ({profileData.education.postGraduationYear})</p>
-                </div>
-              {/if}
-            </div>
-          </div>
-        </div>
-      {:else}
-        <!-- Profile Completion Status -->
-        <div class="card p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Profile Completion</h2>
-          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p class="text-yellow-800">
-              Complete your profile to get the most out of your learning experience. 
-              Click "Edit Profile" to add your educational background, contact information, and more.
-            </p>
-          </div>
-        </div>
-      {/if}
-    {/if}
-  </div>
-</Layout>
