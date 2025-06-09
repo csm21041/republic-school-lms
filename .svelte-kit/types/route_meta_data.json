@@ -9,6 +9,7 @@
 	"/grades": [],
 	"/lectures": [],
 	"/login": [],
+	"/payments": [],
 	"/profile": [
 		"src/routes/profile/+page.ts"
 	]
