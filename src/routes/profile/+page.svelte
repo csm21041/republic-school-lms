@@ -757,3 +757,10 @@
               <p class="text-sm"><span class="font-medium">School:</span> {profileData.education.twelfthSchool}</p>
               <p class="text-sm"><span class="font-medium">Year:</span> {profileData.education.twelfthYear}</p>
               <p class="text-sm"><span class="font-medium">Percentage:</span> {profileData.education.twelfthPercentage}</p>
+            </div>
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+</div>
