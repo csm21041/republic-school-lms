@@ -7,30 +7,28 @@
   import Sidebar from '$lib/components/Sidebar.svelte';
   import '../app.css';
 
-  let sidebarOpen = false;
-  let showSidebar = true;
-  let showNavbar = true;
+  let sidebarOpen = $state(false);
+  let showSidebar = $state(true);
+  let showNavbar = $state(true);
 
-  // Determine layout based on current route
-  $: {
+  // Determine layout based on current route using runes
+  $effect(() => {
     const path = $page.url.pathname;
-    showSidebar = $isAuthenticated && path !== '/login' && path !== '/';
+    showSidebar = isAuthenticated.value && path !== '/login' && path !== '/';
     showNavbar = true;
-  }
+  });
 
   onMount(() => {
     // Redirect to login if not authenticated and not on login page
-    const unsubscribe = isAuthenticated.subscribe(auth => {
+    $effect(() => {
       const currentPath = $page.url.pathname;
       
-      if (!auth && currentPath !== '/login' && currentPath !== '/') {
+      if (!isAuthenticated.value && currentPath !== '/login' && currentPath !== '/') {
         goto('/login');
-      } else if (auth && (currentPath === '/login' || currentPath === '/')) {
+      } else if (isAuthenticated.value && (currentPath === '/login' || currentPath === '/')) {
         goto('/dashboard');
       }
     });
-
-    return unsubscribe;
   });
 
   function toggleSidebar() {
@@ -46,11 +44,11 @@
   {/if}
   
   <div class="flex {showNavbar ? 'pt-16' : ''}">
-    {#if showSidebar && $isAuthenticated}
+    {#if showSidebar && isAuthenticated.value}
       <Sidebar bind:isOpen={sidebarOpen} />
     {/if}
     
-    <main class="flex-1 {showSidebar && $isAuthenticated ? 'lg:ml-64' : ''} transition-all duration-300 overflow-y-auto max-h-screen">
+    <main class="flex-1 {showSidebar && isAuthenticated.value ? 'lg:ml-64' : ''} transition-all duration-300 overflow-y-auto max-h-screen">
       <slot />
     </main>
   </div>

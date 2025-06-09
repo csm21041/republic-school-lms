@@ -48,16 +48,16 @@
         </button>
 
         <!-- User Menu -->
-        {#if $currentUser}
+        {#if currentUser.value}
           <div class="relative flex items-center space-x-3">
             <img
-              src={$currentUser.avatar}
-              alt={$currentUser.name}
+              src={currentUser.value.avatar}
+              alt={currentUser.value.name}
               class="h-8 w-8 rounded-full object-cover"
             />
             <div class="hidden md:block">
-              <p class="text-sm font-medium text-gray-900">{$currentUser.name}</p>
-              <p class="text-xs text-gray-500">{$currentUser.email}</p>
+              <p class="text-sm font-medium text-gray-900">{currentUser.value.name}</p>
+              <p class="text-xs text-gray-500">{currentUser.value.email}</p>
             </div>
             
             <!-- Dropdown Menu -->

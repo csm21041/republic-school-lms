@@ -2,20 +2,20 @@
   import { FileEdit as Edit, Mail, Phone, MapPin, Calendar, User, BookOpen, Heart, Globe, Award, FileText, Users, Briefcase } from 'lucide-svelte';
   import { currentUser, updateUser } from '$lib/stores/auth';
 
-  let isEditing = false;
-  let profileData = {
+  let isEditing = $state(false);
+  let profileData = $state({
     // Personal Information
     personal: {
-      name: $currentUser?.name || '',
-      email: $currentUser?.email || '',
-      phone: $currentUser?.phone || '',
+      name: currentUser.value?.name || '',
+      email: currentUser.value?.email || '',
+      phone: currentUser.value?.phone || '',
       dateOfBirth: '',
       gender: '',
       nationality: '',
       religion: '',
       category: '',
       maritalStatus: '',
-      profilePhoto: $currentUser?.avatar || ''
+      profilePhoto: currentUser.value?.avatar || ''
     },
     
     // Address Information
@@ -120,7 +120,7 @@
       professionalRefOrganization: '',
       professionalRefContact: ''
     }
-  };
+  });
 
   // Load data from localStorage on component mount
   function loadProfileData() {
@@ -140,9 +140,9 @@
     localStorage.setItem('profileData', JSON.stringify(profileData));
     
     // Update current user with basic info
-    if ($currentUser) {
+    if (currentUser.value) {
       const updatedUser = {
-        ...$currentUser,
+        ...currentUser.value,
         name: profileData.personal.name,
         email: profileData.personal.email,
         phone: profileData.personal.phone,
@@ -268,8 +268,8 @@
     saveProfileData();
   }
 
-  // Calculate profile completion percentage
-  function calculateCompletion() {
+  // Calculate profile completion percentage using runes
+  let completionPercentage = $derived(() => {
     const requiredFields = [
       profileData.personal.name,
       profileData.personal.email,
@@ -294,12 +294,10 @@
     
     const filledFields = requiredFields.filter(field => field && field.trim() !== '').length;
     return Math.round((filledFields / requiredFields.length) * 100);
-  }
+  });
 
   // Load data on component mount
   loadProfileData();
-
-  $: completionPercentage = calculateCompletion();
 </script>
 
 <svelte:head>
@@ -312,8 +310,8 @@
     <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
       <div class="relative">
         <img 
-          src={profileData.personal.profilePhoto || $currentUser?.avatar} 
-          alt={profileData.personal.name || $currentUser?.name}
+          src={profileData.personal.profilePhoto || currentUser.value?.avatar} 
+          alt={profileData.personal.name || currentUser.value?.name}
           class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
         />
         {#if isEditing}
@@ -325,7 +323,7 @@
       
       <div class="flex-1">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">
-          {profileData.personal.name || $currentUser?.name || 'Complete Your Profile'}
+          {profileData.personal.name || currentUser.value?.name || 'Complete Your Profile'}
         </h1>
         <p class="text-gray-600 mb-4">
           {profileData.learning.careerGoals || 'Student at Republic School of Journalism'}
@@ -350,10 +348,10 @@
               <span>{profileData.address.currentCity}, {profileData.address.currentState}</span>
             </div>
           {/if}
-          {#if $currentUser?.joinDate}
+          {#if currentUser.value?.joinDate}
             <div class="flex items-center space-x-1">
               <Calendar class="w-4 h-4" />
-              <span>Joined {new Date($currentUser.joinDate).toLocaleDateString()}</span>
+              <span>Joined {new Date(currentUser.value.joinDate).toLocaleDateString()}</span>
             </div>
           {/if}
         </div>
@@ -362,12 +360,12 @@
         <div class="mb-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-gray-700">Profile Completion</span>
-            <span class="text-sm font-bold text-primary-600">{completionPercentage}%</span>
+            <span class="text-sm font-bold text-primary-600">{completionPercentage()}%</span>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-3">
             <div 
               class="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full transition-all duration-500"
-              style="width: {completionPercentage}%"
+              style="width: {completionPercentage()}%"
             ></div>
           </div>
         </div>

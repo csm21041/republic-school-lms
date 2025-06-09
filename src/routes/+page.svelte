@@ -4,16 +4,14 @@
   import { isAuthenticated } from '$lib/stores/auth';
 
   onMount(() => {
-    // Redirect based on authentication status
-    const unsubscribe = isAuthenticated.subscribe(auth => {
-      if (auth) {
+    // Redirect based on authentication status using runes
+    $effect(() => {
+      if (isAuthenticated.value) {
         goto('/dashboard');
       } else {
         goto('/login');
       }
     });
-
-    return unsubscribe;
   });
 </script>
 
