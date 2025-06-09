@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Edit, Mail, Phone, MapPin, Calendar, Award, BookOpen, Trophy, Save, X } from 'lucide-svelte';
+  import { FileEdit as Edit, Mail, Phone, MapPin, Calendar, Award, BookOpen, Trophy, Save, X } from 'lucide-svelte';
   import Layout from '../components/Layout.svelte';
   import { currentUser } from '../stores/auth';
   import { courses } from '../stores/courses';
