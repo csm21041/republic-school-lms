@@ -2,11 +2,38 @@
   import { CreditCard, Calendar, Download, AlertCircle, CheckCircle, Clock, DollarSign, FileText, Plus } from 'lucide-svelte';
   import { payments, transactions } from '$lib/stores/payments';
   import type { PaymentMethod, Transaction } from '$lib/stores/payments';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
 
   let selectedTab = 'overview'; // 'overview', 'methods', 'history', 'invoices'
   let activityTab = 'transactions'; // 'transactions', 'status'
   let showAddPaymentMethod = false;
   let selectedTransaction: Transaction | null = null;
+
+  // Handle tab navigation from URL parameters
+  onMount(() => {
+    const unsubscribe = page.subscribe(($page) => {
+      const tab = $page.url.searchParams.get('tab');
+      if (tab && ['overview', 'methods', 'history', 'invoices'].includes(tab)) {
+        selectedTab = tab;
+      }
+    });
+    
+    return unsubscribe;
+  });
+
+  // Update URL when tab changes
+  function changeTab(tab: string) {
+    selectedTab = tab;
+    const url = new URL(window.location.href);
+    if (tab === 'overview') {
+      url.searchParams.delete('tab');
+    } else {
+      url.searchParams.set('tab', tab);
+    }
+    goto(url.pathname + url.search, { replaceState: true });
+  }
 
   // Filter transactions by type
   $: completedPayments = $transactions.filter(t => t.type === 'payment' && t.status === 'completed');
@@ -85,25 +112,25 @@
     <nav class="-mb-px flex space-x-8">
       <button
         class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {selectedTab === 'overview' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-        on:click={() => selectedTab = 'overview'}
+        on:click={() => changeTab('overview')}
       >
         Overview
       </button>
       <button
         class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {selectedTab === 'methods' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-        on:click={() => selectedTab = 'methods'}
+        on:click={() => changeTab('methods')}
       >
         Payment Methods
       </button>
       <button
         class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {selectedTab === 'history' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-        on:click={() => selectedTab = 'history'}
+        on:click={() => changeTab('history')}
       >
         Transaction History
       </button>
       <button
         class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {selectedTab === 'invoices' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
-        on:click={() => selectedTab = 'invoices'}
+        on:click={() => changeTab('invoices')}
       >
         Invoices & Receipts
       </button>
@@ -264,7 +291,7 @@
               <div class="flex items-center justify-between mb-4">
                 <p class="text-sm text-gray-600">Latest payment activities</p>
                 <button 
-                  on:click={() => selectedTab = 'history'}
+                  on:click={() => changeTab('history')}
                   class="text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
                   View All
