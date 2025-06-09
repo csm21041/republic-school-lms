@@ -1,8 +1,18 @@
 <script lang="ts">
   import { FileEdit as Edit, Mail, Phone, MapPin, Calendar, User, BookOpen, Heart, Globe, Award, FileText, Users, Briefcase } from 'lucide-svelte';
-  import { currentUser, updateUser } from '$lib/stores/auth';
+  import { currentUser, updateUser, authLoading } from '$lib/stores/auth';
+  import { profileAPI } from '$lib/api/profile';
+  import type { ProfileUpdateRequest } from '$lib/api/profile';
+  import { onMount } from 'svelte';
 
   let isEditing = false;
+  let isSaving = false;
+  let saveError = '';
+  let saveSuccess = '';
+  let isLoadingProfile = false;
+  let avatarFile: File | null = null;
+  let avatarPreview = '';
+  
   let profileData = {
     // Personal Information
     personal: {
@@ -122,47 +132,187 @@
     }
   };
 
-  // Load data from localStorage on component mount
-  function loadProfileData() {
-    const savedData = localStorage.getItem('profileData');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        profileData = { ...profileData, ...parsed };
-      } catch (error) {
-        console.error('Error loading profile data:', error);
-      }
-    }
-  }
-
-  // Save data to localStorage
-  function saveProfileData() {
-    localStorage.setItem('profileData', JSON.stringify(profileData));
+  // Load profile data from API
+  async function loadProfileData() {
+    isLoadingProfile = true;
+    saveError = '';
     
-    // Update current user with basic info
-    if ($currentUser) {
-      const updatedUser = {
-        ...$currentUser,
-        name: profileData.personal.name,
-        email: profileData.personal.email,
-        phone: profileData.personal.phone,
-        bio: profileData.learning.careerGoals,
-        location: `${profileData.address.currentCity}, ${profileData.address.currentState}`
-      };
-      updateUser(updatedUser);
+    try {
+      const response = await profileAPI.getProfile();
+      
+      if (response.success && response.data) {
+        // Update current user
+        updateUser(response.data);
+        
+        // Update profile data if available
+        if (response.data.profileData) {
+          profileData = { ...profileData, ...response.data.profileData };
+        }
+        
+        // Update basic info from user data
+        profileData.personal.name = response.data.name;
+        profileData.personal.email = response.data.email;
+        profileData.personal.phone = response.data.phone || '';
+        profileData.personal.profilePhoto = response.data.avatar;
+      }
+    } catch (error: any) {
+      console.error('Error loading profile:', error);
+      saveError = error.message || 'Failed to load profile data';
+      
+      // Fallback to localStorage
+      const savedData = localStorage.getItem('profileData');
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          profileData = { ...profileData, ...parsed };
+        } catch (parseError) {
+          console.error('Error parsing saved data:', parseError);
+        }
+      }
+    } finally {
+      isLoadingProfile = false;
     }
   }
 
-  function toggleEdit() {
+  // Save profile data to API
+  async function saveProfileData() {
+    isSaving = true;
+    saveError = '';
+    saveSuccess = '';
+    
+    try {
+      // Prepare update request
+      const updateRequest: ProfileUpdateRequest = {
+        personal: {
+          name: profileData.personal.name,
+          phone: profileData.personal.phone,
+          dateOfBirth: profileData.personal.dateOfBirth,
+          gender: profileData.personal.gender,
+          nationality: profileData.personal.nationality,
+          religion: profileData.personal.religion,
+          category: profileData.personal.category,
+          maritalStatus: profileData.personal.maritalStatus,
+        },
+        address: profileData.address,
+        education: profileData.education,
+        parentGuardian: profileData.parentGuardian,
+        emergencyContact: profileData.emergencyContact,
+        medical: profileData.medical,
+        professional: profileData.professional,
+        learning: profileData.learning,
+        additional: profileData.additional,
+        references: profileData.references
+      };
+      
+      const response = await profileAPI.updateProfile(updateRequest);
+      
+      if (response.success && response.data) {
+        // Update current user
+        updateUser(response.data);
+        
+        // Save to localStorage as backup
+        localStorage.setItem('profileData', JSON.stringify(profileData));
+        
+        saveSuccess = 'Profile updated successfully!';
+        
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          saveSuccess = '';
+        }, 3000);
+      } else {
+        saveError = response.message || 'Failed to update profile';
+      }
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      saveError = error.message || 'Failed to update profile. Please try again.';
+      
+      // Save to localStorage as fallback
+      localStorage.setItem('profileData', JSON.stringify(profileData));
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  async function toggleEdit() {
     if (isEditing) {
-      saveProfileData();
+      await saveProfileData();
     }
     isEditing = !isEditing;
   }
 
   function cancelEdit() {
     isEditing = false;
+    saveError = '';
+    saveSuccess = '';
     loadProfileData(); // Reload original data
+  }
+
+  // Handle avatar upload
+  async function handleAvatarUpload(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    
+    if (!file) return;
+    
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      saveError = 'File size must be less than 5MB';
+      return;
+    }
+    
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      saveError = 'Only JPEG, PNG, and WebP images are allowed';
+      return;
+    }
+    
+    avatarFile = file;
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      avatarPreview = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  // Upload avatar
+  async function uploadAvatar() {
+    if (!avatarFile) return;
+    
+    isSaving = true;
+    saveError = '';
+    
+    try {
+      const response = await profileAPI.uploadAvatar(avatarFile);
+      
+      if (response.success && response.data) {
+        // Update profile photo
+        profileData.personal.profilePhoto = response.data.avatarUrl;
+        
+        // Update current user
+        if ($currentUser) {
+          updateUser({
+            ...$currentUser,
+            avatar: response.data.avatarUrl
+          });
+        }
+        
+        saveSuccess = 'Profile photo updated successfully!';
+        avatarFile = null;
+        avatarPreview = '';
+        
+        setTimeout(() => {
+          saveSuccess = '';
+        }, 3000);
+      } else {
+        saveError = response.message || 'Failed to upload avatar';
+      }
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      saveError = error.message || 'Failed to upload avatar';
+    } finally {
+      isSaving = false;
+    }
   }
 
   function loadSampleData() {
@@ -296,10 +446,12 @@
     return Math.round((filledFields / requiredFields.length) * 100);
   }
 
-  // Load data on component mount
-  loadProfileData();
-
   $: completionPercentage = calculateCompletion();
+  
+  // Load profile data on component mount
+  onMount(() => {
+    loadProfileData();
+  });
 </script>
 
 <svelte:head>
@@ -307,19 +459,91 @@
 </svelte:head>
 
 <div class="p-6 max-w-6xl mx-auto space-y-6">
+  <!-- Loading State -->
+  {#if isLoadingProfile}
+    <div class="flex items-center justify-center py-12">
+      <div class="flex items-center space-x-3">
+        <div class="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-gray-600">Loading profile...</span>
+      </div>
+    </div>
+  {:else}
+    
+  <!-- Success/Error Messages -->
+  {#if saveSuccess}
+    <div class="bg-success-50 border border-success-200 text-success-700 px-4 py-3 rounded-lg flex items-start space-x-2">
+      <div class="flex-shrink-0 mt-0.5">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-medium">Success</p>
+        <p class="text-sm">{saveSuccess}</p>
+      </div>
+    </div>
+  {/if}
+  
+  {#if saveError}
+    <div class="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg flex items-start space-x-2">
+      <div class="flex-shrink-0 mt-0.5">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-medium">Error</p>
+        <p class="text-sm">{saveError}</p>
+      </div>
+    </div>
+  {/if}
+
   <!-- Profile Header -->
   <div class="card p-8">
     <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
       <div class="relative">
         <img 
-          src={profileData.personal.profilePhoto || $currentUser?.avatar} 
+          src={avatarPreview || profileData.personal.profilePhoto || $currentUser?.avatar} 
           alt={profileData.personal.name || $currentUser?.name}
           class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
         />
         {#if isEditing}
-          <button class="absolute bottom-2 right-2 w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white hover:bg-primary-700 transition-colors duration-200">
-            <Edit class="w-4 h-4" />
-          </button>
+          <div class="absolute bottom-2 right-2">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              on:change={handleAvatarUpload}
+              class="hidden"
+              id="avatar-upload"
+            />
+            <label
+              for="avatar-upload"
+              class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white hover:bg-primary-700 transition-colors duration-200 cursor-pointer"
+            >
+              <Edit class="w-4 h-4" />
+            </label>
+          </div>
+        {/if}
+        
+        {#if avatarFile}
+          <div class="mt-2 flex space-x-2">
+            <button
+              on:click={uploadAvatar}
+              disabled={isSaving}
+              class="btn btn-primary text-xs px-3 py-1 disabled:opacity-50"
+            >
+              {isSaving ? 'Uploading...' : 'Upload'}
+            </button>
+            <button
+              on:click={() => {
+                avatarFile = null;
+                avatarPreview = '';
+              }}
+              class="btn btn-secondary text-xs px-3 py-1"
+            >
+              Cancel
+            </button>
+          </div>
         {/if}
       </div>
       
@@ -377,12 +601,21 @@
         {#if isEditing}
           <button 
             on:click={toggleEdit}
-            class="btn btn-primary"
+            disabled={isSaving || $authLoading}
+            class="btn btn-primary disabled:opacity-50"
           >
-            Save Changes
+            {#if isSaving}
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Saving...</span>
+              </div>
+            {:else}
+              Save Changes
+            {/if}
           </button>
           <button 
             on:click={cancelEdit}
+            disabled={isSaving}
             class="btn btn-secondary"
           >
             Cancel
@@ -390,6 +623,7 @@
         {:else}
           <button 
             on:click={toggleEdit}
+            disabled={$authLoading}
             class="btn btn-primary flex items-center space-x-2"
           >
             <Edit class="w-4 h-4" />
@@ -398,6 +632,7 @@
         {/if}
         <button 
           on:click={loadSampleData}
+          disabled={isSaving || $authLoading}
           class="btn btn-secondary text-sm"
         >
           Load Sample Data
@@ -405,6 +640,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Network Status Warning -->
+  {#if !navigator.onLine}
+    <div class="bg-warning-50 border border-warning-200 text-warning-700 px-4 py-3 rounded-lg">
+      <p class="text-sm font-medium">No Internet Connection</p>
+      <p class="text-sm">Changes will be saved locally and synced when connection is restored.</p>
+    </div>
+  {/if}
 
   <!-- Profile Information Sections -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -525,417 +768,3 @@
               <p class="text-sm"><span class="font-medium">School:</span> {profileData.education.twelfthSchool}</p>
               <p class="text-sm"><span class="font-medium">Year:</span> {profileData.education.twelfthYear}</p>
               <p class="text-sm"><span class="font-medium">Percentage:</span> {profileData.education.twelfthPercentage}</p>
-            </div>
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    <!-- Family Information -->
-    <div class="card p-6">
-      <div class="flex items-center space-x-2 mb-4">
-        <Users class="w-5 h-5 text-primary-600" />
-        <h2 class="text-xl font-bold text-gray-900">Family & Emergency Contact</h2>
-      </div>
-      <div class="space-y-4">
-        <div>
-          <h3 class="font-medium text-gray-900 mb-2">Parent/Guardian Information</h3>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-sm"><span class="font-medium">Name:</span> {profileData.parentGuardian.name || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Relationship:</span> {profileData.parentGuardian.relationship || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Contact:</span> {profileData.parentGuardian.contactNumber || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Email:</span> {profileData.parentGuardian.email || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Occupation:</span> {profileData.parentGuardian.occupation || 'Not provided'}</p>
-          </div>
-        </div>
-        
-        <div>
-          <h3 class="font-medium text-gray-900 mb-2">Emergency Contact</h3>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-sm"><span class="font-medium">Name:</span> {profileData.emergencyContact.name || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Relationship:</span> {profileData.emergencyContact.relationship || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Contact:</span> {profileData.emergencyContact.contactNumber || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Email:</span> {profileData.emergencyContact.email || 'Not provided'}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Medical Information -->
-    <div class="card p-6">
-      <div class="flex items-center space-x-2 mb-4">
-        <Heart class="w-5 h-5 text-primary-600" />
-        <h2 class="text-xl font-bold text-gray-900">Medical Information</h2>
-      </div>
-      <div class="space-y-3">
-        <div>
-          <span class="text-sm font-medium text-gray-600">Blood Group:</span>
-          <p class="text-gray-900">{profileData.medical.bloodGroup || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Medical Conditions:</span>
-          <p class="text-gray-900">{profileData.medical.medicalConditions || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Allergies:</span>
-          <p class="text-gray-900">{profileData.medical.allergies || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Current Medications:</span>
-          <p class="text-gray-900">{profileData.medical.medications || 'Not provided'}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Professional Information -->
-    <div class="card p-6">
-      <div class="flex items-center space-x-2 mb-4">
-        <Briefcase class="w-5 h-5 text-primary-600" />
-        <h2 class="text-xl font-bold text-gray-900">Professional Information</h2>
-      </div>
-      <div class="space-y-3">
-        <div>
-          <span class="text-sm font-medium text-gray-600">Current Employment:</span>
-          <p class="text-gray-900">{profileData.professional.currentEmployment || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Designation:</span>
-          <p class="text-gray-900">{profileData.professional.designation || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Organization:</span>
-          <p class="text-gray-900">{profileData.professional.organization || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Work Experience:</span>
-          <p class="text-gray-900">{profileData.professional.workExperience || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Skills:</span>
-          <p class="text-gray-900">{profileData.professional.skills || 'Not provided'}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Learning & Career Goals -->
-    <div class="card p-6">
-      <div class="flex items-center space-x-2 mb-4">
-        <Award class="w-5 h-5 text-primary-600" />
-        <h2 class="text-xl font-bold text-gray-900">Learning & Career Goals</h2>
-      </div>
-      <div class="space-y-3">
-        <div>
-          <span class="text-sm font-medium text-gray-600">Course Interests:</span>
-          <p class="text-gray-900">{profileData.learning.courseInterests || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Career Goals:</span>
-          <p class="text-gray-900">{profileData.learning.careerGoals || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Technical Skills:</span>
-          <p class="text-gray-900">{profileData.learning.technicalSkills || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Learning Style:</span>
-          <p class="text-gray-900">{profileData.learning.preferredLearningStyle || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Expectations:</span>
-          <p class="text-gray-900">{profileData.learning.expectations || 'Not provided'}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional Information -->
-    <div class="card p-6">
-      <div class="flex items-center space-x-2 mb-4">
-        <Globe class="w-5 h-5 text-primary-600" />
-        <h2 class="text-xl font-bold text-gray-900">Additional Information</h2>
-      </div>
-      <div class="space-y-3">
-        <div>
-          <span class="text-sm font-medium text-gray-600">Languages:</span>
-          <p class="text-gray-900">{profileData.additional.languages || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Hobbies & Interests:</span>
-          <p class="text-gray-900">{profileData.additional.hobbies || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Achievements:</span>
-          <p class="text-gray-900">{profileData.additional.achievements || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Extracurricular Activities:</span>
-          <p class="text-gray-900">{profileData.additional.extracurricular || 'Not provided'}</p>
-        </div>
-        <div>
-          <span class="text-sm font-medium text-gray-600">Social Media:</span>
-          <p class="text-gray-900">{profileData.additional.socialMedia || 'Not provided'}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- References -->
-    <div class="card p-6">
-      <div class="flex items-center space-x-2 mb-4">
-        <FileText class="w-5 h-5 text-primary-600" />
-        <h2 class="text-xl font-bold text-gray-900">References</h2>
-      </div>
-      <div class="space-y-4">
-        <div>
-          <h3 class="font-medium text-gray-900 mb-2">Academic Reference</h3>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-sm"><span class="font-medium">Name:</span> {profileData.references.academicRefName || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Designation:</span> {profileData.references.academicRefDesignation || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Institution:</span> {profileData.references.academicRefInstitution || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Contact:</span> {profileData.references.academicRefContact || 'Not provided'}</p>
-          </div>
-        </div>
-        
-        <div>
-          <h3 class="font-medium text-gray-900 mb-2">Professional Reference</h3>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-sm"><span class="font-medium">Name:</span> {profileData.references.professionalRefName || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Designation:</span> {profileData.references.professionalRefDesignation || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Organization:</span> {profileData.references.professionalRefOrganization || 'Not provided'}</p>
-            <p class="text-sm"><span class="font-medium">Contact:</span> {profileData.references.professionalRefContact || 'Not provided'}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Profile Form (shown when editing) -->
-  {#if isEditing}
-    <div class="card p-6">
-      <h2 class="text-xl font-bold text-gray-900 mb-6">Edit Profile Information</h2>
-      
-      <!-- Personal Information Form -->
-      <div class="space-y-6">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-              <input
-                type="text"
-                bind:value={profileData.personal.name}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-              <input
-                type="email"
-                bind:value={profileData.personal.email}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-              <input
-                type="tel"
-                bind:value={profileData.personal.phone}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth *</label>
-              <input
-                type="date"
-                bind:value={profileData.personal.dateOfBirth}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Gender *</label>
-              <select
-                bind:value={profileData.personal.gender}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-                <option value="Prefer not to say">Prefer not to say</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nationality</label>
-              <input
-                type="text"
-                bind:value={profileData.personal.nationality}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Last Qualification -->
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Last Qualification</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Degree/Qualification *</label>
-              <input
-                type="text"
-                bind:value={profileData.education.lastQualificationDegree}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Institution/University *</label>
-              <input
-                type="text"
-                bind:value={profileData.education.lastQualificationInstitution}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Year of Passing *</label>
-              <input
-                type="text"
-                bind:value={profileData.education.lastQualificationYear}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Parent/Guardian Information -->
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Parent/Guardian Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Name *</label>
-              <input
-                type="text"
-                bind:value={profileData.parentGuardian.name}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Relationship to Student *</label>
-              <select
-                bind:value={profileData.parentGuardian.relationship}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              >
-                <option value="">Select Relationship</option>
-                <option value="Father">Father</option>
-                <option value="Mother">Mother</option>
-                <option value="Guardian">Guardian</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Contact Number *</label>
-              <input
-                type="tel"
-                bind:value={profileData.parentGuardian.contactNumber}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Email</label>
-              <input
-                type="email"
-                bind:value={profileData.parentGuardian.email}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Emergency Contact -->
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Emergency Contact Details</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name *</label>
-              <input
-                type="text"
-                bind:value={profileData.emergencyContact.name}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Relationship *</label>
-              <input
-                type="text"
-                bind:value={profileData.emergencyContact.relationship}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Number *</label>
-              <input
-                type="tel"
-                bind:value={profileData.emergencyContact.contactNumber}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Email</label>
-              <input
-                type="email"
-                bind:value={profileData.emergencyContact.email}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Medical Information -->
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Medical Information</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Blood Group *</label>
-              <select
-                bind:value={profileData.medical.bloodGroup}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              >
-                <option value="">Select Blood Group</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Any Medical Conditions *</label>
-              <input
-                type="text"
-                bind:value={profileData.medical.medicalConditions}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter 'None' if no conditions"
-                required
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  {/if}
-</div>
