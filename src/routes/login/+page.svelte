@@ -1,6 +1,7 @@
 <script lang="ts">
   import { sendOTP, verifyOTP, authLoading, authError } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
   import { Mail, ArrowRight, RefreshCw } from 'lucide-svelte';
 
   let email = '';
@@ -224,7 +225,7 @@
         {/if}
 
         <!-- Network Status -->
-        {#if !navigator.onLine}
+        {#if browser && !navigator.onLine}
           <div class="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
             <p class="text-sm font-medium">No Internet Connection</p>
             <p class="text-sm">Please check your network connection and try again.</p>
@@ -234,7 +235,7 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          disabled={isLoading || !navigator.onLine}
+          disabled={isLoading || (browser && !navigator.onLine)}
           class="w-full btn btn-primary py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
         >
           {#if isLoading}
@@ -303,7 +304,7 @@
             <button
               type="button"
               on:click={resendOTP}
-              disabled={isLoading || !navigator.onLine}
+              disabled={isLoading || (browser && !navigator.onLine)}
               class="text-sm text-primary-600 hover:text-primary-500 font-medium disabled:opacity-50 flex items-center space-x-1 mx-auto"
             >
               <RefreshCw class="w-4 h-4" />
@@ -315,7 +316,7 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          disabled={isLoading || otp.length !== 6 || !navigator.onLine}
+          disabled={isLoading || otp.length !== 6 || (browser && !navigator.onLine)}
           class="w-full btn btn-primary py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {#if isLoading}
