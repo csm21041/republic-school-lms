@@ -1,3 +1,5 @@
+import { writable } from 'svelte/store';
+
 export interface Course {
   id: string;
   title: string;
@@ -166,29 +168,35 @@ const initialCourses: Course[] = [
   }
 ];
 
-export const courses = $state<Course[]>(initialCourses);
+export const courses = writable<Course[]>(initialCourses);
 
 // Helper functions
 export function enrollInCourse(courseId: string) {
-  const courseIndex = courses.value.findIndex(course => course.id === courseId);
-  if (courseIndex !== -1) {
-    courses.value[courseIndex].isEnrolled = true;
-  }
+  courses.update(courseList => 
+    courseList.map(course => 
+      course.id === courseId 
+        ? { ...course, isEnrolled: true }
+        : course
+    )
+  );
 }
 
 export function unenrollFromCourse(courseId: string) {
-  const courseIndex = courses.value.findIndex(course => course.id === courseId);
-  if (courseIndex !== -1) {
-    courses.value[courseIndex].isEnrolled = false;
-    courses.value[courseIndex].progress = 0;
-    courses.value[courseIndex].completedLessons = 0;
-  }
+  courses.update(courseList => 
+    courseList.map(course => 
+      course.id === courseId 
+        ? { ...course, isEnrolled: false, progress: 0, completedLessons: 0 }
+        : course
+    )
+  );
 }
 
 export function updateCourseProgress(courseId: string, progress: number, completedLessons: number) {
-  const courseIndex = courses.value.findIndex(course => course.id === courseId);
-  if (courseIndex !== -1) {
-    courses.value[courseIndex].progress = progress;
-    courses.value[courseIndex].completedLessons = completedLessons;
-  }
+  courses.update(courseList => 
+    courseList.map(course => 
+      course.id === courseId 
+        ? { ...course, progress, completedLessons }
+        : course
+    )
+  );
 }

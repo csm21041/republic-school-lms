@@ -1,3 +1,4 @@
+import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
 export interface User {
@@ -15,6 +16,10 @@ export interface User {
   location?: string;
 }
 
+// Create stores
+export const currentUser = writable<User | null>(null);
+export const isAuthenticated = writable<boolean>(false);
+
 // Demo user data
 const demoUser: User = {
   id: '1',
@@ -31,10 +36,6 @@ const demoUser: User = {
   location: 'New York, NY'
 };
 
-// Create runes-based stores
-export const currentUser = $state<User | null>(null);
-export const isAuthenticated = $state<boolean>(false);
-
 // Initialize auth state from localStorage if in browser
 if (browser) {
   const storedAuth = localStorage.getItem('isAuthenticated');
@@ -43,8 +44,8 @@ if (browser) {
   if (storedAuth === 'true' && storedUser) {
     try {
       const user = JSON.parse(storedUser);
-      currentUser.value = user;
-      isAuthenticated.value = true;
+      currentUser.set(user);
+      isAuthenticated.set(true);
     } catch (error) {
       console.error('Error parsing stored user data:', error);
       localStorage.removeItem('isAuthenticated');
@@ -79,8 +80,8 @@ export function verifyOTP(email: string, otp: string): boolean {
   
   if (storedOTP === otp && storedEmail === email) {
     // Set user as authenticated
-    currentUser.value = demoUser;
-    isAuthenticated.value = true;
+    currentUser.set(demoUser);
+    isAuthenticated.set(true);
     
     // Store in localStorage
     localStorage.setItem('isAuthenticated', 'true');
@@ -97,8 +98,8 @@ export function verifyOTP(email: string, otp: string): boolean {
 }
 
 export function logout(): void {
-  currentUser.value = null;
-  isAuthenticated.value = false;
+  currentUser.set(null);
+  isAuthenticated.set(false);
   
   if (browser) {
     localStorage.removeItem('isAuthenticated');
@@ -109,7 +110,7 @@ export function logout(): void {
 }
 
 export function updateUser(updatedUser: User): void {
-  currentUser.value = updatedUser;
+  currentUser.set(updatedUser);
   
   if (browser) {
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
