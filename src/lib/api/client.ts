@@ -1,4 +1,4 @@
-// API Client Configuration
+// SvelteKit API Client Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.republicschool.edu';
 
 export interface ApiResponse<T = any> {
@@ -140,3 +140,41 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
+
+// SvelteKit-specific API helpers for server-side data loading
+export async function serverFetch<T>(
+  fetch: typeof globalThis.fetch,
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || `HTTP ${response.status}: ${response.statusText}`,
+        errors: data.errors
+      };
+    }
+
+    return {
+      success: true,
+      data
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'Network error occurred'
+    };
+  }
+}

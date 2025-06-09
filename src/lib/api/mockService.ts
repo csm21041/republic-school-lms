@@ -169,9 +169,13 @@ class MockAPIService {
   async getCourses(): Promise<ApiResponse> {
     await this.delay();
     
+    if (this.shouldSimulateFailure()) {
+      return mockErrorResponses.networkError;
+    }
+    
     return {
       success: true,
-      data: mockApiResponses.getProfile.data // This would be courses data
+      data: mockApiResponses.getCourses.data
     };
   }
 
@@ -179,9 +183,41 @@ class MockAPIService {
   async getAssignments(): Promise<ApiResponse> {
     await this.delay();
     
+    if (this.shouldSimulateFailure()) {
+      return mockErrorResponses.networkError;
+    }
+    
     return {
       success: true,
-      data: [] // This would be assignments data
+      data: mockApiResponses.getAssignments.data
+    };
+  }
+
+  // Mock Grades API
+  async getGrades(): Promise<ApiResponse> {
+    await this.delay();
+    
+    if (this.shouldSimulateFailure()) {
+      return mockErrorResponses.networkError;
+    }
+    
+    return {
+      success: true,
+      data: mockApiResponses.getGrades.data
+    };
+  }
+
+  // Mock Attendance API
+  async getAttendance(): Promise<ApiResponse> {
+    await this.delay();
+    
+    if (this.shouldSimulateFailure()) {
+      return mockErrorResponses.networkError;
+    }
+    
+    return {
+      success: true,
+      data: mockApiResponses.getAttendance.data
     };
   }
 

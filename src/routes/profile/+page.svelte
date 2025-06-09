@@ -1,17 +1,26 @@
 <script lang="ts">
+  import type { PageData } from './$types';
   import { FileEdit as Edit, Mail, Phone, MapPin, Calendar, User, BookOpen, Heart, Globe, Award, FileText, Users, Briefcase } from 'lucide-svelte';
   import { currentUser, updateUser, authLoading } from '$lib/stores/auth';
   import { profileAPI } from '$lib/api/profile';
   import type { ProfileUpdateRequest } from '$lib/api/profile';
   import { onMount } from 'svelte';
 
+  export let data: PageData;
+
   let isEditing = false;
   let isSaving = false;
   let saveError = '';
   let saveSuccess = '';
-  let isLoadingProfile = false;
   let avatarFile: File | null = null;
   let avatarPreview = '';
+
+  // Initialize with data from load function
+  $: if (data.profile && !isEditing) {
+    initializeProfileData(data.profile);
+  }
+
+  $: loadError = data.error;
   
   let profileData = {
     // Personal Information
@@ -133,44 +142,21 @@
   };
 
   // Load profile data from API
-  async function loadProfileData() {
-    isLoadingProfile = true;
-    saveError = '';
-    
-    try {
-      const response = await profileAPI.getProfile();
+  function initializeProfileData(profile: any) {
+    if (profile) {
+      // Update current user
+      updateUser(profile);
       
-      if (response.success && response.data) {
-        // Update current user
-        updateUser(response.data);
-        
-        // Update profile data if available
-        if (response.data.profileData) {
-          profileData = { ...profileData, ...response.data.profileData };
-        }
-        
-        // Update basic info from user data
-        profileData.personal.name = response.data.name;
-        profileData.personal.email = response.data.email;
-        profileData.personal.phone = response.data.phone || '';
-        profileData.personal.profilePhoto = response.data.avatar;
+      // Update profile data if available
+      if (profile.profileData) {
+        profileData = { ...profileData, ...profile.profileData };
       }
-    } catch (error: any) {
-      console.error('Error loading profile:', error);
-      saveError = error.message || 'Failed to load profile data';
       
-      // Fallback to localStorage
-      const savedData = localStorage.getItem('profileData');
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          profileData = { ...profileData, ...parsed };
-        } catch (parseError) {
-          console.error('Error parsing saved data:', parseError);
-        }
-      }
-    } finally {
-      isLoadingProfile = false;
+      // Update basic info from user data
+      profileData.personal.name = profile.name;
+      profileData.personal.email = profile.email;
+      profileData.personal.phone = profile.phone || '';
+      profileData.personal.profilePhoto = profile.avatar;
     }
   }
 
@@ -244,7 +230,10 @@
     isEditing = false;
     saveError = '';
     saveSuccess = '';
-    loadProfileData(); // Reload original data
+    // Reload original data
+    if (data.profile) {
+      initializeProfileData(data.profile);
+    }
   }
 
   // Handle avatar upload
@@ -450,7 +439,9 @@
   
   // Load profile data on component mount
   onMount(() => {
-    loadProfileData();
+    if (data.profile) {
+      initializeProfileData(data.profile);
+    }
   });
 </script>
 
@@ -459,15 +450,13 @@
 </svelte:head>
 
 <div class="p-6 max-w-6xl mx-auto space-y-6">
-  <!-- Loading State -->
-  {#if isLoadingProfile}
-    <div class="flex items-center justify-center py-12">
-      <div class="flex items-center space-x-3">
-        <div class="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-gray-600">Loading profile...</span>
-      </div>
+  <!-- Error Message -->
+  {#if loadError}
+    <div class="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
+      <p class="text-sm font-medium">Error Loading Profile</p>
+      <p class="text-sm">{loadError}</p>
     </div>
-  {:else}
+  {/if}
     
   <!-- Success/Error Messages -->
   {#if saveSuccess}

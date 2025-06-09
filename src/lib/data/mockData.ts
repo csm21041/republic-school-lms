@@ -291,6 +291,30 @@ export const mockApiResponses = {
       avatarUrl: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
       message: 'Avatar uploaded successfully'
     }
+  },
+
+  // Course responses
+  getCourses: {
+    success: true,
+    data: mockCourses
+  },
+
+  // Assignment responses
+  getAssignments: {
+    success: true,
+    data: mockAssignments
+  },
+
+  // Grade responses
+  getGrades: {
+    success: true,
+    data: mockGrades
+  },
+
+  // Attendance responses
+  getAttendance: {
+    success: true,
+    data: mockAttendance
   }
 };
 
