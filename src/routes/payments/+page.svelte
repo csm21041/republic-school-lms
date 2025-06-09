@@ -4,6 +4,7 @@
   import type { PaymentMethod, Transaction } from '$lib/stores/payments';
 
   let selectedTab = 'overview'; // 'overview', 'methods', 'history', 'invoices'
+  let activityTab = 'transactions'; // 'transactions', 'status'
   let showAddPaymentMethod = false;
   let selectedTransaction: Transaction | null = null;
 
@@ -234,33 +235,155 @@
       </div>
 
       <!-- Recent Transactions -->
-      <div class="card p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-gray-900">Recent Transactions</h2>
-          <button 
-            on:click={() => selectedTab = 'history'}
-            class="text-sm text-primary-600 hover:text-primary-700 font-medium"
-          >
-            View All
-          </button>
+      <!-- Recent Activity Section with Tabs -->
+      <div class="card">
+        <div class="border-b border-gray-200">
+          <div class="px-6 py-4">
+            <h2 class="text-xl font-bold text-gray-900">Recent Activity</h2>
+          </div>
+          <nav class="px-6 -mb-px flex space-x-8">
+            <button
+              class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {activityTab === 'transactions' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+              on:click={() => activityTab = 'transactions'}
+            >
+              Recent Transactions
+            </button>
+            <button
+              class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 {activityTab === 'status' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+              on:click={() => activityTab = 'status'}
+            >
+              Current Status
+            </button>
+          </nav>
         </div>
-        <div class="space-y-3">
-          {#each $transactions.slice(0, 5) as transaction}
-            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-              <div class="flex-1">
-                <p class="font-medium text-gray-900 text-sm">{transaction.description}</p>
-                <p class="text-xs text-gray-500">{new Date(transaction.date).toLocaleDateString()}</p>
+        
+        <div class="p-6">
+          {#if activityTab === 'transactions'}
+            <!-- Recent Transactions Content -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-sm text-gray-600">Latest payment activities</p>
+                <button 
+                  on:click={() => selectedTab = 'history'}
+                  class="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  View All
+                </button>
               </div>
-              <div class="flex items-center space-x-3">
-                <span class="text-sm font-bold text-gray-900">
-                  {transaction.type === 'refund' ? '+' : '-'}${transaction.amount}
-                </span>
-                <span class="px-2 py-1 text-xs font-medium rounded-full {getStatusColor(transaction.status)}">
-                  {transaction.status}
-                </span>
+              {#each $transactions.slice(0, 5) as transaction}
+                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                  <div class="flex-1">
+                    <p class="font-medium text-gray-900 text-sm">{transaction.description}</p>
+                    <p class="text-xs text-gray-500">{new Date(transaction.date).toLocaleDateString()}</p>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <span class="text-sm font-bold text-gray-900">
+                      {transaction.type === 'refund' ? '+' : '-'}${transaction.amount}
+                    </span>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full {getStatusColor(transaction.status)}">
+                      {transaction.status}
+                    </span>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {:else if activityTab === 'status'}
+            <!-- Current Status Content -->
+            <div class="space-y-4">
+              <p class="text-sm text-gray-600 mb-4">Overview of your payment status and upcoming obligations</p>
+              
+              <!-- Payment Status Cards -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-success-100 rounded-lg flex items-center justify-center">
+                      <CheckCircle class="w-4 h-4 text-success-600" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">Completed Payments</p>
+                      <p class="text-xs text-gray-500">{completedPayments.length} transactions</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-warning-100 rounded-lg flex items-center justify-center">
+                      <Clock class="w-4 h-4 text-warning-600" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">Pending Payments</p>
+                      <p class="text-xs text-gray-500">{pendingPayments.length} transactions</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-error-100 rounded-lg flex items-center justify-center">
+                      <AlertCircle class="w-4 h-4 text-error-600" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">Failed Payments</p>
+                      <p class="text-xs text-gray-500">{failedPayments.length} transactions</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <DollarSign class="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">Refunds</p>
+                      <p class="text-xs text-gray-500">{refunds.length} transactions</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Next Payment Due -->
+              {#if $payments.nextPaymentDate}
+                <div class="border border-warning-200 bg-warning-50 rounded-lg p-4">
+                  <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-warning-100 rounded-lg flex items-center justify-center">
+                      <Calendar class="w-4 h-4 text-warning-600" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-warning-900">Next Payment Due</p>
+                      <p class="text-sm text-warning-700">
+                        Payment due on {new Date($payments.nextPaymentDate).toLocaleDateString()}
+                      </p>
+                      <p class="text-xs text-warning-600 mt-1">
+                        Don't forget to make your payment to avoid any service interruption
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              {/if}
+              
+              <!-- Payment Methods Summary -->
+              <div class="border border-gray-200 rounded-lg p-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Active Payment Methods</h4>
+                <div class="space-y-2">
+                  {#each $payments.paymentMethods as method}
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center space-x-2">
+                        <CreditCard class="w-4 h-4 text-gray-400" />
+                        <span class="text-sm text-gray-700">{method.type} •••• {method.last4}</span>
+                      </div>
+                      {#if method.isDefault}
+                        <span class="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-700 rounded-full">
+                          Default
+                        </span>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
               </div>
             </div>
-          {/each}
+          {/if}
         </div>
       </div>
     </div>
