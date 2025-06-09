@@ -482,4 +482,3 @@
     </div>
   </div>
 {/if}
-</script>
