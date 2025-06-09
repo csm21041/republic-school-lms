@@ -85,6 +85,20 @@
       email: ''
     },
     
+    // Parent/Guardian Information
+    parentGuardian: {
+      name: '',
+      relationship: '',
+      phone: '',
+      email: ''
+    },
+    
+    // Medical Information
+    medicalInfo: {
+      bloodGroup: '',
+      medicalConditions: ''
+    },
+    
     // Documents
     documents: {
       photo: null,
@@ -186,6 +200,11 @@
       profileData.education.twelfthBoard,
       profileData.education.twelfthPercentage,
       profileData.education.twelfthYear,
+      profileData.parentGuardian.name,
+      profileData.parentGuardian.relationship,
+      profileData.parentGuardian.phone,
+      profileData.medicalInfo.bloodGroup,
+      profileData.medicalInfo.medicalConditions,
       profileData.emergencyContact.name,
       profileData.emergencyContact.relationship,
       profileData.emergencyContact.phone
@@ -282,6 +301,18 @@
         relationship: 'Father',
         phone: '+91 9876543212',
         email: 'rajesh.johnson@email.com'
+      },
+      
+      parentGuardian: {
+        name: 'Rajesh Johnson',
+        relationship: 'Father',
+        phone: '+91 9876543212',
+        email: 'rajesh.johnson@email.com'
+      },
+      
+      medicalInfo: {
+        bloodGroup: 'O+',
+        medicalConditions: 'No known allergies or medical conditions'
       },
       
       documents: {
@@ -619,117 +650,100 @@
           </div>
         </div>
 
-        <!-- Educational Background -->
+        <!-- Parent/Guardian Information -->
         <div class="card p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">Educational Background</h2>
-          
-          <!-- 10th Standard -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">10th Standard</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Board *</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.tenthBoard}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Percentage/CGPA *</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.tenthPercentage}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Year of Passing *</label>
-                <input
-                  type="number"
-                  bind:value={profileData.education.tenthYear}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-              </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-6">Parent/Guardian Information</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Name *</label>
+              <input
+                type="text"
+                bind:value={profileData.parentGuardian.name}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Relationship to Student *</label>
+              <select
+                bind:value={profileData.parentGuardian.relationship}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              >
+                <option value="">Select Relationship</option>
+                <option value="father">Father</option>
+                <option value="mother">Mother</option>
+                <option value="guardian">Guardian</option>
+                <option value="uncle">Uncle</option>
+                <option value="aunt">Aunt</option>
+                <option value="grandfather">Grandfather</option>
+                <option value="grandmother">Grandmother</option>
+                <option value="brother">Brother</option>
+                <option value="sister">Sister</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Contact Number *</label>
+              <input
+                type="tel"
+                bind:value={profileData.parentGuardian.phone}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Email</label>
+              <input
+                type="email"
+                bind:value={profileData.parentGuardian.email}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
             </div>
           </div>
+        </div>
 
-          <!-- 12th Standard -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">12th Standard</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Board *</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.twelfthBoard}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Percentage/CGPA *</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.twelfthPercentage}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Year of Passing *</label>
-                <input
-                  type="number"
-                  bind:value={profileData.education.twelfthYear}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  required
-                />
-              </div>
+        <!-- Medical Information -->
+        <div class="card p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">Medical Information</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Blood Group *</label>
+              <select
+                bind:value={profileData.medicalInfo.bloodGroup}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              >
+                <option value="">Select Blood Group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+            
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Any Medical Conditions (if applicable) *</label>
+              <textarea
+                bind:value={profileData.medicalInfo.medicalConditions}
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Please mention any medical conditions, allergies, medications, or write 'None' if not applicable"
+                required
+              ></textarea>
+              <p class="text-xs text-gray-500 mt-1">This information is kept confidential and used only for emergency purposes</p>
             </div>
           </div>
+        </div>
 
-          <!-- Graduation -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Graduation</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">University/College</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.graduationUniversity}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Degree</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.graduationDegree}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Percentage/CGPA</label>
-                <input
-                  type="text"
-                  bind:value={profileData.education.graduationPercentage}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Year of Passing</label>
-                <input
-                  type="number"
-                  bind:value={profileData.education.graduationYear}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
+        <!-- Emergency Contact -->
+        <div class="card p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">Emergency Contact</h2>
+          <div class="grid grid-cols-1 md:grid-cols-
