@@ -3,12 +3,12 @@ import type { ApiResponse } from './client';
 
 // Mock API service that simulates real API behavior
 class MockAPIService {
-  private isEnabled: boolean;
+  private _isEnabled: boolean;
   private baseDelay: number;
   private failureRate: number;
 
   constructor() {
-    this.isEnabled = import.meta.env.VITE_ENABLE_MOCK_API === 'true' || import.meta.env.DEV;
+    this._isEnabled = import.meta.env.VITE_ENABLE_MOCK_API === 'true' || import.meta.env.DEV;
     this.baseDelay = 800; // Base delay in milliseconds
     this.failureRate = 0.1; // 10% chance of random failures in dev mode
   }
@@ -223,7 +223,7 @@ class MockAPIService {
 
   // Utility methods
   isEnabled(): boolean {
-    return this.isEnabled;
+    return this._isEnabled;
   }
 
   setFailureRate(rate: number): void {
