@@ -746,4 +746,186 @@
         <!-- Emergency Contact -->
         <div class="card p-6">
           <h2 class="text-xl font-bold text-gray-900 mb-6">Emergency Contact</h2>
-          <div class="grid grid-cols-1 md:grid-cols-
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name *</label>
+              <input
+                type="text"
+                bind:value={profileData.emergencyContact.name}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Relationship *</label>
+              <select
+                bind:value={profileData.emergencyContact.relationship}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              >
+                <option value="">Select Relationship</option>
+                <option value="father">Father</option>
+                <option value="mother">Mother</option>
+                <option value="spouse">Spouse</option>
+                <option value="sibling">Sibling</option>
+                <option value="friend">Friend</option>
+                <option value="relative">Relative</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Number *</label>
+              <input
+                type="tel"
+                bind:value={profileData.emergencyContact.phone}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Email</label>
+              <input
+                type="email"
+                bind:value={profileData.emergencyContact.email}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    {:else}
+      <!-- Profile Display Mode -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column - Profile Stats -->
+        <div class="space-y-6">
+          <!-- Learning Progress -->
+          <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <BookOpen class="w-5 h-5 mr-2 text-primary-600" />
+              Learning Progress
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span>Overall Progress</span>
+                  <span>{totalProgress}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    class="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                    style="width: {totalProgress}%"
+                  ></div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div class="text-2xl font-bold text-primary-600">{enrolledCourses.length}</div>
+                  <div class="text-sm text-gray-500">Active Courses</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold text-green-600">{completedCourses.length}</div>
+                  <div class="text-sm text-gray-500">Completed</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Achievements -->
+          <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Trophy class="w-5 h-5 mr-2 text-yellow-600" />
+              Achievements
+            </h3>
+            <div class="space-y-3">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <Award class="w-4 h-4 text-yellow-600" />
+                </div>
+                <div>
+                  <div class="font-medium text-sm">First Course Completed</div>
+                  <div class="text-xs text-gray-500">Completed your first journalism course</div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <BookOpen class="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <div class="font-medium text-sm">Active Learner</div>
+                  <div class="text-xs text-gray-500">Logged in for 7 consecutive days</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Profile Information -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Contact Information -->
+          <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex items-center space-x-3">
+                <Mail class="w-5 h-5 text-gray-400" />
+                <div>
+                  <div class="text-sm text-gray-500">Email</div>
+                  <div class="font-medium">{$currentUser?.email}</div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <Phone class="w-5 h-5 text-gray-400" />
+                <div>
+                  <div class="text-sm text-gray-500">Phone</div>
+                  <div class="font-medium">{$currentUser?.phone || 'Not provided'}</div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <MapPin class="w-5 h-5 text-gray-400" />
+                <div>
+                  <div class="text-sm text-gray-500">Location</div>
+                  <div class="font-medium">{profileData.currentAddress.city || 'Not provided'}</div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <Calendar class="w-5 h-5 text-gray-400" />
+                <div>
+                  <div class="text-sm text-gray-500">Joined</div>
+                  <div class="font-medium">{new Date($currentUser?.joinDate || '').toLocaleDateString()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Courses -->
+          <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Courses</h3>
+            {#if enrolledCourses.length > 0}
+              <div class="space-y-4">
+                {#each enrolledCourses as course}
+                  <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-2">
+                      <h4 class="font-medium text-gray-900">{course.title}</h4>
+                      <span class="text-sm text-gray-500">{course.progress || 0}% complete</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div 
+                        class="bg-primary-600 h-2 rounded-full"
+                        style="width: {course.progress || 0}%"
+                      ></div>
+                    </div>
+                    <p class="text-sm text-gray-600">{course.description}</p>
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <p class="text-gray-500">No courses enrolled yet. Browse our course catalog to get started!</p>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
+  </div>
+</Layout>
