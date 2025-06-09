@@ -1,3 +1,5 @@
+import { writable } from 'svelte/store';
+
 export interface Lecture {
   id: string;
   title: string;
@@ -166,7 +168,7 @@ const initialLectures: Lecture[] = [
   }
 ];
 
-export const lectures = $state<Lecture[]>(initialLectures);
+export const lectures = writable<Lecture[]>(initialLectures);
 
 // Helper functions
 export function markAttendance(lectureId: string, attended: boolean) {
@@ -175,25 +177,25 @@ export function markAttendance(lectureId: string, attended: boolean) {
 }
 
 export function addLecture(lecture: Lecture) {
-  lectures.push(lecture);
+  lectures.update(lectureList => [...lectureList, lecture]);
 }
 
 export function updateLecture(lectureId: string, updates: Partial<Lecture>) {
-  const lectureIndex = lectures.findIndex(lecture => lecture.id === lectureId);
-  if (lectureIndex !== -1) {
-    lectures[lectureIndex] = {
-      ...lectures[lectureIndex],
-      ...updates
-    };
-  }
+  lectures.update(lectureList => 
+    lectureList.map(lecture => 
+      lecture.id === lectureId 
+        ? { ...lecture, ...updates }
+        : lecture
+    )
+  );
 }
 
 export function cancelLecture(lectureId: string) {
-  const lectureIndex = lectures.findIndex(lecture => lecture.id === lectureId);
-  if (lectureIndex !== -1) {
-    lectures[lectureIndex] = {
-      ...lectures[lectureIndex],
-      status: 'cancelled' as const
-    };
-  }
+  lectures.update(lectureList => 
+    lectureList.map(lecture => 
+      lecture.id === lectureId 
+        ? { ...lecture, status: 'cancelled' as const }
+        : lecture
+    )
+  );
 }

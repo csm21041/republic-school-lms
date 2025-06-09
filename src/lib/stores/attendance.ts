@@ -1,3 +1,5 @@
+import { writable } from 'svelte/store';
+
 export interface AttendanceRecord {
   id: string;
   lectureId: string;
@@ -105,8 +107,8 @@ const initialAttendanceSummaries: AttendanceSummary[] = [
   }
 ];
 
-export const attendanceRecords = $state<AttendanceRecord[]>(initialAttendanceRecords);
-export const attendanceSummaries = $state<AttendanceSummary[]>(initialAttendanceSummaries);
+export const attendanceRecords = writable<AttendanceRecord[]>(initialAttendanceRecords);
+export const attendanceSummaries = writable<AttendanceSummary[]>(initialAttendanceSummaries);
 
 // Helper functions
 export function markAttendance(lectureId: string, status: AttendanceRecord['status'], checkInTime?: string, notes?: string) {
@@ -123,18 +125,18 @@ export function markAttendance(lectureId: string, status: AttendanceRecord['stat
     notes
   };
 
-  attendanceRecords.push(newRecord);
+  attendanceRecords.update(records => [...records, newRecord]);
   updateAttendanceSummary(newRecord.courseId);
 }
 
 export function updateAttendanceRecord(recordId: string, updates: Partial<AttendanceRecord>) {
-  const recordIndex = attendanceRecords.findIndex(record => record.id === recordId);
-  if (recordIndex !== -1) {
-    attendanceRecords[recordIndex] = {
-      ...attendanceRecords[recordIndex],
-      ...updates
-    };
-  }
+  attendanceRecords.update(records => 
+    records.map(record => 
+      record.id === recordId 
+        ? { ...record, ...updates }
+        : record
+    )
+  );
 }
 
 function updateAttendanceSummary(courseId: string) {
@@ -143,9 +145,13 @@ function updateAttendanceSummary(courseId: string) {
 }
 
 export function getAttendanceForCourse(courseId: string) {
-  return attendanceRecords.filter(record => record.courseId === courseId);
+  return attendanceRecords.subscribe(records => 
+    records.filter(record => record.courseId === courseId)
+  );
 }
 
 export function getAttendanceSummaryForCourse(courseId: string) {
-  return attendanceSummaries.find(summary => summary.courseId === courseId);
+  return attendanceSummaries.subscribe(summaries => 
+    summaries.find(summary => summary.courseId === courseId)
+  );
 }

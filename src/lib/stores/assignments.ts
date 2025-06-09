@@ -1,3 +1,5 @@
+import { writable } from 'svelte/store';
+
 export interface Assignment {
   id: string;
   title: string;
@@ -136,42 +138,39 @@ const initialAssignments: Assignment[] = [
   }
 ];
 
-export const assignments = $state<Assignment[]>(initialAssignments);
+export const assignments = writable<Assignment[]>(initialAssignments);
 
 // Helper functions
 export function submitAssignment(assignmentId: string, submissionDate: string = new Date().toISOString()) {
-  const assignmentIndex = assignments.findIndex(assignment => assignment.id === assignmentId);
-  if (assignmentIndex !== -1) {
-    assignments[assignmentIndex] = {
-      ...assignments[assignmentIndex],
-      status: 'submitted' as const,
-      submissionDate
-    };
-  }
+  assignments.update(assignmentList => 
+    assignmentList.map(assignment => 
+      assignment.id === assignmentId 
+        ? { ...assignment, status: 'submitted' as const, submissionDate }
+        : assignment
+    )
+  );
 }
 
 export function gradeAssignment(assignmentId: string, score: number, feedback: string) {
-  const assignmentIndex = assignments.findIndex(assignment => assignment.id === assignmentId);
-  if (assignmentIndex !== -1) {
-    assignments[assignmentIndex] = {
-      ...assignments[assignmentIndex],
-      status: 'graded' as const,
-      score,
-      feedback
-    };
-  }
+  assignments.update(assignmentList => 
+    assignmentList.map(assignment => 
+      assignment.id === assignmentId 
+        ? { ...assignment, status: 'graded' as const, score, feedback }
+        : assignment
+    )
+  );
 }
 
 export function addAssignment(assignment: Assignment) {
-  assignments.push(assignment);
+  assignments.update(assignmentList => [...assignmentList, assignment]);
 }
 
 export function updateAssignment(assignmentId: string, updates: Partial<Assignment>) {
-  const assignmentIndex = assignments.findIndex(assignment => assignment.id === assignmentId);
-  if (assignmentIndex !== -1) {
-    assignments[assignmentIndex] = {
-      ...assignments[assignmentIndex],
-      ...updates
-    };
-  }
+  assignments.update(assignmentList => 
+    assignmentList.map(assignment => 
+      assignment.id === assignmentId 
+        ? { ...assignment, ...updates }
+        : assignment
+    )
+  );
 }
