@@ -6,105 +6,218 @@ export interface GradeEntry {
   assignmentTitle: string;
   courseId: string;
   courseName: string;
-  studentId: string;
+  instructor: string;
   score: number;
   maxScore: number;
   percentage: number;
   letterGrade: string;
+  gradeDate: string;
   feedback?: string;
-  gradedBy: string;
-  gradedDate: string;
-  submissionDate: string;
+  rubricScores?: {
+    criteria: string;
+    score: number;
+    maxScore: number;
+    feedback?: string;
+  }[];
   category: 'assignment' | 'quiz' | 'exam' | 'project' | 'participation';
   weight: number; // Weight in final grade calculation
 }
 
-export interface CourseGrade {
+export interface CourseGradeSummary {
   courseId: string;
   courseName: string;
-  studentId: string;
+  instructor: string;
   currentGrade: number;
   letterGrade: string;
   totalPoints: number;
   earnedPoints: number;
-  assignments: GradeEntry[];
-  lastUpdated: string;
+  assignments: {
+    completed: number;
+    total: number;
+    averageScore: number;
+  };
+  breakdown: {
+    category: string;
+    weight: number;
+    currentScore: number;
+    maxScore: number;
+    percentage: number;
+  }[];
 }
 
-const mockGradeEntries: GradeEntry[] = [
+const initialGradeEntries: GradeEntry[] = [
   {
     id: '1',
-    assignmentId: '1',
-    assignmentTitle: 'Digital News Article Analysis',
+    assignmentId: '4',
+    assignmentTitle: 'Data Analysis Project',
+    courseId: '2',
+    courseName: 'Investigative Reporting Masterclass',
+    instructor: 'Sarah Williams',
+    score: 105,
+    maxScore: 120,
+    percentage: 87.5,
+    letterGrade: 'B+',
+    gradeDate: '2024-01-22',
+    feedback: 'Excellent analysis and compelling narrative. The visualizations effectively support your findings. Consider exploring the demographic breakdown further in future work.',
+    rubricScores: [
+      { criteria: 'Data Analysis', score: 35, maxScore: 40, feedback: 'Thorough and accurate analysis' },
+      { criteria: 'Story Development', score: 26, maxScore: 30, feedback: 'Strong narrative structure' },
+      { criteria: 'Visualizations', score: 28, maxScore: 30, feedback: 'Clear and effective charts' },
+      { criteria: 'Documentation', score: 16, maxScore: 20, feedback: 'Good methodology, could be more detailed' }
+    ],
+    category: 'project',
+    weight: 25
+  },
+  {
+    id: '2',
+    assignmentId: '5',
+    assignmentTitle: 'Interview Transcript Analysis',
     courseId: '1',
     courseName: 'Digital Journalism Fundamentals',
-    studentId: '1',
+    instructor: 'Dr. Michael Chen',
+    score: 72,
+    maxScore: 80,
+    percentage: 90,
+    letterGrade: 'A-',
+    gradeDate: '2024-01-28',
+    feedback: 'Good transcription accuracy and identification of key themes. Work on developing stronger lead angles from the interview content.',
+    rubricScores: [
+      { criteria: 'Transcription Accuracy', score: 23, maxScore: 25, feedback: 'Very accurate transcription' },
+      { criteria: 'Key Quote Identification', score: 18, maxScore: 20, feedback: 'Good selection of impactful quotes' },
+      { criteria: 'Story Angle Development', score: 22, maxScore: 25, feedback: 'Solid angles, could be more creative' },
+      { criteria: 'Analysis Quality', score: 9, maxScore: 10, feedback: 'Insightful analysis' }
+    ],
+    category: 'assignment',
+    weight: 15
+  },
+  {
+    id: '3',
+    assignmentId: '10',
+    assignmentTitle: 'Digital Ethics Quiz',
+    courseId: '1',
+    courseName: 'Digital Journalism Fundamentals',
+    instructor: 'Dr. Michael Chen',
     score: 88,
     maxScore: 100,
     percentage: 88,
     letterGrade: 'B+',
-    feedback: 'Excellent analysis of digital media trends. Consider exploring more diverse sources.',
-    gradedBy: 'Dr. Michael Chen',
-    gradedDate: '2024-02-10T14:30:00',
-    submissionDate: '2024-02-08T23:45:00',
-    category: 'assignment',
-    weight: 0.2
+    gradeDate: '2024-02-05',
+    feedback: 'Strong understanding of ethical principles. Review social media verification protocols.',
+    category: 'quiz',
+    weight: 10
   },
   {
-    id: '2',
-    assignmentId: '2',
-    assignmentTitle: 'Interview Transcript',
-    courseId: '1',
-    courseName: 'Digital Journalism Fundamentals',
-    studentId: '1',
+    id: '4',
+    assignmentId: '11',
+    assignmentTitle: 'Research Methods Exam',
+    courseId: '2',
+    courseName: 'Investigative Reporting Masterclass',
+    instructor: 'Sarah Williams',
     score: 92,
     maxScore: 100,
     percentage: 92,
     letterGrade: 'A-',
-    feedback: 'Outstanding interview technique and thorough transcription. Great follow-up questions.',
-    gradedBy: 'Dr. Michael Chen',
-    gradedDate: '2024-02-12T16:20:00',
-    submissionDate: '2024-02-07T18:30:00',
-    category: 'assignment',
-    weight: 0.15
+    gradeDate: '2024-02-10',
+    feedback: 'Excellent grasp of investigative techniques. Outstanding work on FOIA procedures.',
+    category: 'exam',
+    weight: 30
   },
   {
-    id: '3',
-    assignmentId: 'quiz-1',
-    assignmentTitle: 'Digital Media Quiz 1',
+    id: '5',
+    assignmentId: '12',
+    assignmentTitle: 'Class Participation - Week 4',
     courseId: '1',
     courseName: 'Digital Journalism Fundamentals',
-    studentId: '1',
-    score: 85,
+    instructor: 'Dr. Michael Chen',
+    score: 95,
     maxScore: 100,
-    percentage: 85,
-    letterGrade: 'B',
-    gradedBy: 'Dr. Michael Chen',
-    gradedDate: '2024-02-05T10:00:00',
-    submissionDate: '2024-02-05T09:45:00',
-    category: 'quiz',
-    weight: 0.1
+    percentage: 95,
+    letterGrade: 'A',
+    gradeDate: '2024-02-02',
+    feedback: 'Active participation in discussions. Thoughtful questions and insights.',
+    category: 'participation',
+    weight: 5
   }
 ];
 
-const mockCourseGrades: CourseGrade[] = [
+const initialCourseGradeSummaries: CourseGradeSummary[] = [
   {
     courseId: '1',
     courseName: 'Digital Journalism Fundamentals',
-    studentId: '1',
+    instructor: 'Dr. Michael Chen',
     currentGrade: 89.2,
     letterGrade: 'B+',
-    totalPoints: 300,
-    earnedPoints: 265,
-    assignments: mockGradeEntries.filter(g => g.courseId === '1'),
-    lastUpdated: '2024-02-12T16:20:00'
+    totalPoints: 380,
+    earnedPoints: 339,
+    assignments: {
+      completed: 3,
+      total: 8,
+      averageScore: 85
+    },
+    breakdown: [
+      { category: 'Assignments', weight: 40, currentScore: 160, maxScore: 180, percentage: 88.9 },
+      { category: 'Quizzes', weight: 20, currentScore: 88, maxScore: 100, percentage: 88 },
+      { category: 'Participation', weight: 10, currentScore: 95, maxScore: 100, percentage: 95 },
+      { category: 'Final Project', weight: 30, currentScore: 0, maxScore: 100, percentage: 0 }
+    ]
+  },
+  {
+    courseId: '2',
+    courseName: 'Investigative Reporting Masterclass',
+    instructor: 'Sarah Williams',
+    currentGrade: 91.5,
+    letterGrade: 'A-',
+    totalPoints: 320,
+    earnedPoints: 293,
+    assignments: {
+      completed: 2,
+      total: 6,
+      averageScore: 89
+    },
+    breakdown: [
+      { category: 'Projects', weight: 50, currentScore: 105, maxScore: 120, percentage: 87.5 },
+      { category: 'Exams', weight: 30, currentScore: 92, maxScore: 100, percentage: 92 },
+      { category: 'Research Papers', weight: 20, currentScore: 0, maxScore: 100, percentage: 0 }
+    ]
   }
 ];
 
-export const gradeEntries = writable<GradeEntry[]>(mockGradeEntries);
-export const courseGrades = writable<CourseGrade[]>(mockCourseGrades);
+export const gradeEntries = writable<GradeEntry[]>(initialGradeEntries);
+export const courseGradeSummaries = writable<CourseGradeSummary[]>(initialCourseGradeSummaries);
 
 // Helper functions
+export function addGrade(grade: GradeEntry) {
+  gradeEntries.update(grades => [...grades, grade]);
+  updateCourseGradeSummary(grade.courseId);
+}
+
+export function updateGrade(gradeId: string, updates: Partial<GradeEntry>) {
+  gradeEntries.update(grades => 
+    grades.map(grade => 
+      grade.id === gradeId 
+        ? { ...grade, ...updates }
+        : grade
+    )
+  );
+}
+
+export function getGradesForCourse(courseId: string) {
+  return gradeEntries.subscribe(grades => 
+    grades.filter(grade => grade.courseId === courseId)
+  );
+}
+
+export function getCourseGradeSummary(courseId: string) {
+  return courseGradeSummaries.subscribe(summaries => 
+    summaries.find(summary => summary.courseId === courseId)
+  );
+}
+
+function updateCourseGradeSummary(courseId: string) {
+  // This would recalculate the course grade summary
+  // Implementation would depend on the specific grading logic
+}
+
 export function calculateLetterGrade(percentage: number): string {
   if (percentage >= 97) return 'A+';
   if (percentage >= 93) return 'A';

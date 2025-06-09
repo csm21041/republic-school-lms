@@ -1,153 +1,118 @@
 import { writable } from 'svelte/store';
+import { browser } from '$app/environment';
 
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar: string;
-  role: 'student' | 'instructor' | 'admin';
-  enrolledCourses: string[];
-  completedCourses: string[];
-  achievements: Achievement[];
-  joinDate: string;
-  bio?: string;
-  phone?: string;
-  location?: string;
+  studentId: string;
   department: string;
   semester: string;
   academicYear: string;
-  studentId: string;
+  joinDate: string;
+  phone?: string;
+  bio?: string;
+  location?: string;
 }
 
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  earnedDate: string;
-  certificateUrl?: string;
-}
-
-const mockUser: User = {
-  id: '1',
-  name: 'Sarah Johnson',
-  email: 'sarah.johnson@email.com',
-  avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-  role: 'student',
-  enrolledCourses: ['1', '2', '3'],
-  completedCourses: ['4', '5'],
-  achievements: [
-    {
-      id: '1',
-      title: 'First Course Completed',
-      description: 'Successfully completed your first journalism course',
-      icon: '🎓',
-      earnedDate: '2024-01-15'
-    },
-    {
-      id: '2',
-      title: 'Perfect Assignment',
-      description: 'Scored 100% on an assignment',
-      icon: '⭐',
-      earnedDate: '2024-01-20'
-    }
-  ],
-  joinDate: '2024-01-01',
-  bio: null,
-  phone: null,
-  location: null,
-  department: 'Journalism',
-  semester: 'Spring',
-  academicYear: '2024',
-  studentId: 'JOUR2024001'
-};
-
-// Create writable stores
+// Create stores
 export const currentUser = writable<User | null>(null);
 export const isAuthenticated = writable<boolean>(false);
 
-// Check if we're in the browser
-const isBrowser = typeof window !== 'undefined';
+// Demo user data
+const demoUser: User = {
+  id: '1',
+  name: 'Alex Johnson',
+  email: 'alex.johnson@student.rsj.edu',
+  avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+  studentId: 'RSJ2024001',
+  department: 'Digital Journalism',
+  semester: '3rd Semester',
+  academicYear: '2024-25',
+  joinDate: '2024-01-15',
+  phone: '+1 (555) 123-4567',
+  bio: 'Aspiring investigative journalist with a passion for uncovering truth',
+  location: 'New York, NY'
+};
 
-// Initialize from localStorage if in browser
-if (isBrowser) {
-  const storedUser = localStorage.getItem('currentUser');
+// Initialize auth state from localStorage if in browser
+if (browser) {
   const storedAuth = localStorage.getItem('isAuthenticated');
+  const storedUser = localStorage.getItem('currentUser');
   
-  if (storedUser && storedAuth === 'true') {
+  if (storedAuth === 'true' && storedUser) {
     try {
       const user = JSON.parse(storedUser);
       currentUser.set(user);
       isAuthenticated.set(true);
     } catch (error) {
-      console.error('Error parsing stored user:', error);
-      localStorage.removeItem('currentUser');
+      console.error('Error parsing stored user data:', error);
       localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('currentUser');
     }
   }
 }
 
-// Subscribe to changes and update localStorage
-if (isBrowser) {
-  currentUser.subscribe(user => {
-    if (user) {
-      localStorage.setItem('currentUser', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('currentUser');
-    }
-  });
-
-  isAuthenticated.subscribe(auth => {
-    localStorage.setItem('isAuthenticated', auth.toString());
-  });
-}
-
-// Authentication functions
-export function sendOTP(email: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    // Mock OTP sending - in real app, this would make an API call
-    setTimeout(() => {
-      if (email && email.includes('@')) {
-        // Store the OTP in localStorage for demo purposes
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        localStorage.setItem('demo_otp', otp);
-        localStorage.setItem('demo_email', email);
-        console.log('Demo OTP sent:', otp); // In real app, this would be sent via email
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    }, 1000);
-  });
+// Auth functions
+export async function sendOTP(email: string): Promise<boolean> {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Generate a random 6-digit OTP for demo
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log(`Demo OTP for ${email}: ${otp}`);
+  
+  // Store OTP in localStorage for demo purposes
+  if (browser) {
+    localStorage.setItem('demoOTP', otp);
+    localStorage.setItem('demoEmail', email);
+  }
+  
+  return true;
 }
 
 export function verifyOTP(email: string, otp: string): boolean {
-  // Mock OTP verification - in real app, this would make an API call
-  const storedOTP = localStorage.getItem('demo_otp');
-  const storedEmail = localStorage.getItem('demo_email');
+  if (!browser) return false;
   
-  if (email === storedEmail && otp === storedOTP) {
-    // Clear the OTP after successful verification
-    localStorage.removeItem('demo_otp');
-    localStorage.removeItem('demo_email');
-    
+  const storedOTP = localStorage.getItem('demoOTP');
+  const storedEmail = localStorage.getItem('demoEmail');
+  
+  if (storedOTP === otp && storedEmail === email) {
     // Set user as authenticated
-    currentUser.set(mockUser);
+    currentUser.set(demoUser);
     isAuthenticated.set(true);
+    
+    // Store in localStorage
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('currentUser', JSON.stringify(demoUser));
+    
+    // Clean up OTP data
+    localStorage.removeItem('demoOTP');
+    localStorage.removeItem('demoEmail');
+    
     return true;
   }
+  
   return false;
 }
 
 export function logout(): void {
   currentUser.set(null);
   isAuthenticated.set(false);
-  if (isBrowser) {
-    localStorage.removeItem('currentUser');
+  
+  if (browser) {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('demoOTP');
+    localStorage.removeItem('demoEmail');
   }
 }
 
-export function updateUser(user: User): void {
-  currentUser.set(user);
+export function updateUser(updatedUser: User): void {
+  currentUser.set(updatedUser);
+  
+  if (browser) {
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+  }
 }

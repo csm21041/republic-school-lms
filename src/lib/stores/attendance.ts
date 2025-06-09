@@ -3,92 +3,155 @@ import { writable } from 'svelte/store';
 export interface AttendanceRecord {
   id: string;
   lectureId: string;
-  studentId: string;
-  studentName: string;
-  status: 'present' | 'absent' | 'excused' | 'late';
-  timestamp?: string;
-  checkInMethod?: 'qr' | 'manual' | 'biometric';
+  lectureTitle: string;
+  courseId: string;
+  courseName: string;
+  date: string;
+  time: string;
+  status: 'present' | 'absent' | 'late' | 'excused';
+  checkInTime?: string;
   notes?: string;
 }
 
 export interface AttendanceSummary {
-  studentId: string;
   courseId: string;
+  courseName: string;
   totalLectures: number;
   attendedLectures: number;
-  excusedAbsences: number;
+  absentLectures: number;
+  lateCount: number;
+  excusedCount: number;
   attendancePercentage: number;
-  lastUpdated: string;
 }
 
-const mockAttendanceRecords: AttendanceRecord[] = [
+const initialAttendanceRecords: AttendanceRecord[] = [
   {
     id: '1',
-    lectureId: '1',
-    studentId: '1',
-    studentName: 'Sarah Johnson',
+    lectureId: '4',
+    lectureTitle: 'Ethics in Digital Journalism',
+    courseId: '1',
+    courseName: 'Digital Journalism Fundamentals',
+    date: '2024-02-08',
+    time: '10:00',
     status: 'present',
-    timestamp: '2024-02-01T09:05:00',
-    checkInMethod: 'qr'
+    checkInTime: '09:58'
   },
   {
     id: '2',
-    lectureId: '2',
-    studentId: '1',
-    studentName: 'Sarah Johnson',
+    lectureId: '5',
+    lectureTitle: 'Investigative Research Methods',
+    courseId: '2',
+    courseName: 'Investigative Reporting Masterclass',
+    date: '2024-02-06',
+    time: '14:00',
     status: 'present',
-    timestamp: '2024-02-03T09:02:00',
-    checkInMethod: 'qr'
+    checkInTime: '14:05',
+    notes: 'Arrived slightly late due to previous class'
   },
   {
     id: '3',
-    lectureId: '3',
-    studentId: '1',
-    studentName: 'Sarah Johnson',
-    status: 'absent'
+    lectureId: '7',
+    lectureTitle: 'Introduction to Multimedia',
+    courseId: '1',
+    courseName: 'Digital Journalism Fundamentals',
+    date: '2024-02-01',
+    time: '10:00',
+    status: 'present',
+    checkInTime: '09:55'
   },
   {
     id: '4',
-    lectureId: '1',
-    studentId: '2',
-    studentName: 'Alex Thompson',
-    status: 'late',
-    timestamp: '2024-02-01T09:15:00',
-    checkInMethod: 'manual'
-  }
-];
-
-const mockAttendanceSummaries: AttendanceSummary[] = [
-  {
-    studentId: '1',
-    courseId: '1',
-    totalLectures: 8,
-    attendedLectures: 7,
-    excusedAbsences: 0,
-    attendancePercentage: 87.5,
-    lastUpdated: '2024-02-03T09:02:00'
+    lectureId: '8',
+    lectureTitle: 'Source Development Strategies',
+    courseId: '2',
+    courseName: 'Investigative Reporting Masterclass',
+    date: '2024-01-30',
+    time: '14:00',
+    status: 'absent',
+    notes: 'Medical appointment'
   },
   {
-    studentId: '1',
-    courseId: '2',
-    totalLectures: 5,
-    attendedLectures: 4,
-    excusedAbsences: 1,
-    attendancePercentage: 80.0,
-    lastUpdated: '2024-02-02T14:00:00'
+    id: '5',
+    lectureId: '9',
+    lectureTitle: 'Digital Tools Overview',
+    courseId: '1',
+    courseName: 'Digital Journalism Fundamentals',
+    date: '2024-01-25',
+    time: '10:00',
+    status: 'late',
+    checkInTime: '10:15',
+    notes: 'Traffic delay'
   }
 ];
 
-export const attendanceRecords = writable<AttendanceRecord[]>(mockAttendanceRecords);
-export const attendanceSummaries = writable<AttendanceSummary[]>(mockAttendanceSummaries);
+const initialAttendanceSummaries: AttendanceSummary[] = [
+  {
+    courseId: '1',
+    courseName: 'Digital Journalism Fundamentals',
+    totalLectures: 8,
+    attendedLectures: 6,
+    absentLectures: 1,
+    lateCount: 1,
+    excusedCount: 0,
+    attendancePercentage: 75
+  },
+  {
+    courseId: '2',
+    courseName: 'Investigative Reporting Masterclass',
+    totalLectures: 6,
+    attendedLectures: 5,
+    absentLectures: 1,
+    lateCount: 0,
+    excusedCount: 0,
+    attendancePercentage: 83
+  }
+];
+
+export const attendanceRecords = writable<AttendanceRecord[]>(initialAttendanceRecords);
+export const attendanceSummaries = writable<AttendanceSummary[]>(initialAttendanceSummaries);
 
 // Helper functions
-export function calculateAttendancePercentage(attended: number, total: number): number {
-  return total > 0 ? Math.round((attended / total) * 100) : 0;
+export function markAttendance(lectureId: string, status: AttendanceRecord['status'], checkInTime?: string, notes?: string) {
+  const newRecord: AttendanceRecord = {
+    id: Date.now().toString(),
+    lectureId,
+    lectureTitle: 'Lecture Title', // This would be fetched from lectures store
+    courseId: '1', // This would be determined from the lecture
+    courseName: 'Course Name', // This would be fetched from courses store
+    date: new Date().toISOString().split('T')[0],
+    time: new Date().toTimeString().split(' ')[0].substring(0, 5),
+    status,
+    checkInTime,
+    notes
+  };
+
+  attendanceRecords.update(records => [...records, newRecord]);
+  updateAttendanceSummary(newRecord.courseId);
 }
 
-export function getAttendanceStatus(percentage: number): 'good' | 'warning' | 'critical' {
-  if (percentage >= 75) return 'good';
-  if (percentage >= 60) return 'warning';
-  return 'critical';
+export function updateAttendanceRecord(recordId: string, updates: Partial<AttendanceRecord>) {
+  attendanceRecords.update(records => 
+    records.map(record => 
+      record.id === recordId 
+        ? { ...record, ...updates }
+        : record
+    )
+  );
+}
+
+function updateAttendanceSummary(courseId: string) {
+  // This would recalculate attendance summary for the course
+  // Implementation would depend on the specific business logic
+}
+
+export function getAttendanceForCourse(courseId: string) {
+  return attendanceRecords.subscribe(records => 
+    records.filter(record => record.courseId === courseId)
+  );
+}
+
+export function getAttendanceSummaryForCourse(courseId: string) {
+  return attendanceSummaries.subscribe(summaries => 
+    summaries.find(summary => summary.courseId === courseId)
+  );
 }
