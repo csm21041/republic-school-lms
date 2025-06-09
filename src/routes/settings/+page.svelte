@@ -560,13 +560,23 @@
                   Current Password
                 </label>
                 <div class="relative">
-                  <input
-                    id="currentPassword"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    bind:value={passwordData.currentPassword}
-                    required
-                    class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
+                  {#if showCurrentPassword}
+                    <input
+                      id="currentPassword"
+                      type="text"
+                      bind:value={passwordData.currentPassword}
+                      required
+                      class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  {:else}
+                    <input
+                      id="currentPassword"
+                      type="password"
+                      bind:value={passwordData.currentPassword}
+                      required
+                      class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  {/if}
                   <button
                     type="button"
                     on:click={() => showCurrentPassword = !showCurrentPassword}
@@ -586,13 +596,23 @@
                   New Password
                 </label>
                 <div class="relative">
-                  <input
-                    id="newPassword"
-                    type={showNewPassword ? 'text' : 'password'}
-                    bind:value={passwordData.newPassword}
-                    required
-                    class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
+                  {#if showNewPassword}
+                    <input
+                      id="newPassword"
+                      type="text"
+                      bind:value={passwordData.newPassword}
+                      required
+                      class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  {:else}
+                    <input
+                      id="newPassword"
+                      type="password"
+                      bind:value={passwordData.newPassword}
+                      required
+                      class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  {/if}
                   <button
                     type="button"
                     on:click={() => showNewPassword = !showNewPassword}
@@ -612,13 +632,23 @@
                   Confirm New Password
                 </label>
                 <div class="relative">
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    bind:value={passwordData.confirmPassword}
-                    required
-                    class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
+                  {#if showConfirmPassword}
+                    <input
+                      id="confirmPassword"
+                      type="text"
+                      bind:value={passwordData.confirmPassword}
+                      required
+                      class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  {:else}
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      bind:value={passwordData.confirmPassword}
+                      required
+                      class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  {/if}
                   <button
                     type="button"
                     on:click={() => showConfirmPassword = !showConfirmPassword}
