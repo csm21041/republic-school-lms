@@ -53,9 +53,9 @@ const mockUser: User = {
     }
   ],
   joinDate: '2024-01-01',
-  bio: 'Aspiring journalist passionate about investigative reporting and digital media.',
-  phone: '+1 (555) 123-4567',
-  location: 'New York, NY',
+  bio: null,
+  phone: null,
+  location: null,
   department: 'Journalism',
   semester: 'Spring',
   academicYear: '2024',
