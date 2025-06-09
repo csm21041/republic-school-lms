@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
-import { page } from '$app/stores';
-import { get } from 'svelte/store';
+import { browser } from '$app/environment';
 
 export interface NavigationItem {
   id: string;
@@ -21,18 +20,18 @@ export const navigationItems = writable<NavigationItem[]>([]);
 
 // Initialize navigation tracking
 export function initializeNavigation() {
-  if (typeof window === 'undefined') return;
+  if (!browser) return;
 
-  // Set initial active item based on current path
+  // Load saved state first
+  loadNavigationState();
+
+  // Set initial active item based on current path if no saved state
   const currentPath = window.location.pathname;
-  updateActiveNavigation(currentPath);
-
-  // Listen for navigation changes
-  page.subscribe(($page) => {
-    if ($page?.url?.pathname) {
-      updateActiveNavigation($page.url.pathname);
-    }
-  });
+  const savedActiveItem = localStorage.getItem('activeNavItem');
+  
+  if (!savedActiveItem) {
+    updateActiveNavigation(currentPath);
+  }
 
   // Listen for browser back/forward
   window.addEventListener('popstate', () => {
@@ -43,8 +42,20 @@ export function initializeNavigation() {
 
 // Update active navigation item
 export function updateActiveNavigation(path: string) {
-  // Normalize path
-  const normalizedPath = path === '/' ? '/dashboard' : path;
+  if (!browser) return;
+
+  // Normalize path - handle both hash routing and regular routing
+  let normalizedPath = path;
+  
+  // Handle hash routing (if using hash-based routing)
+  if (path.includes('#')) {
+    normalizedPath = path.split('#')[1] || '/';
+  }
+  
+  // Default to dashboard for root
+  if (normalizedPath === '/' || normalizedPath === '') {
+    normalizedPath = '/dashboard';
+  }
   
   // Update active item
   activeNavItem.set(normalizedPath);
@@ -66,7 +77,7 @@ export function updateActiveNavigation(path: string) {
 
 // Load navigation state from localStorage
 export function loadNavigationState() {
-  if (typeof window === 'undefined') return;
+  if (!browser) return;
   
   try {
     const savedActiveItem = localStorage.getItem('activeNavItem');
@@ -89,7 +100,12 @@ export function loadNavigationState() {
 
 // Check if a path is active
 export function isPathActive(path: string): boolean {
-  const currentActive = get(activeNavItem);
+  if (!browser) return false;
+  
+  let currentActive = '';
+  activeNavItem.subscribe(value => {
+    currentActive = value;
+  })();
   
   // Exact match
   if (currentActive === path) return true;
@@ -105,13 +121,13 @@ export function isPathActive(path: string): boolean {
 
 // Navigate programmatically
 export function navigateTo(path: string) {
+  if (!browser) return;
+  
   updateActiveNavigation(path);
   
   // Use SvelteKit's goto if available, otherwise fallback to window.location
-  if (typeof window !== 'undefined') {
-    window.history.pushState({}, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  }
+  window.history.pushState({}, '', path);
+  window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
 // Get navigation breadcrumbs
@@ -139,11 +155,18 @@ export function getNavigationBreadcrumbs(currentPath: string): NavigationItem[] 
 
 // Clear navigation state
 export function clearNavigationState() {
+  if (!browser) return;
+  
   activeNavItem.set('');
   navigationHistory.set([]);
   
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('activeNavItem');
-    localStorage.removeItem('navigationHistory');
-  }
+  localStorage.removeItem('activeNavItem');
+  localStorage.removeItem('navigationHistory');
+}
+
+// Helper function to get current value from store
+function get<T>(store: any): T {
+  let value: T;
+  store.subscribe((v: T) => value = v)();
+  return value!;
 }

@@ -39,6 +39,15 @@
 
   onMount(() => {
     initializeNavigation();
+    
+    // Update navigation when page changes
+    const unsubscribe = page.subscribe(($page) => {
+      if ($page?.url?.pathname) {
+        updateActiveNavigation($page.url.pathname);
+      }
+    });
+    
+    return unsubscribe;
   });
 
   function handleNavClick(href: string) {
@@ -90,7 +99,7 @@
       {#each navItems as item}
         <a
           href={item.href}
-          class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 {isPathActive(item.href) ? 'bg-primary-100 text-primary-700 border-r-4 border-primary-600 shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}"
+          class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 nav-transition {isPathActive(item.href) ? 'nav-item-active' : 'nav-item-inactive'}"
           on:click={() => handleNavClick(item.href)}
           data-nav-id={item.id}
           aria-current={isPathActive(item.href) ? 'page' : undefined}
@@ -103,7 +112,7 @@
           
           <!-- Active indicator -->
           {#if isPathActive(item.href)}
-            <div class="ml-auto w-2 h-2 bg-primary-600 rounded-full animate-pulse"></div>
+            <div class="ml-auto w-2 h-2 bg-primary-600 rounded-full animate-pulse-subtle"></div>
           {/if}
         </a>
       {/each}
