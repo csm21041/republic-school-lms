@@ -1,5 +1,3 @@
-import { writable } from 'svelte/store';
-
 export interface Assignment {
   id: string;
   title: string;
@@ -138,39 +136,42 @@ const initialAssignments: Assignment[] = [
   }
 ];
 
-export const assignments = writable<Assignment[]>(initialAssignments);
+export const assignments = $state<Assignment[]>(initialAssignments);
 
 // Helper functions
 export function submitAssignment(assignmentId: string, submissionDate: string = new Date().toISOString()) {
-  assignments.update(assignmentList => 
-    assignmentList.map(assignment => 
-      assignment.id === assignmentId 
-        ? { ...assignment, status: 'submitted' as const, submissionDate }
-        : assignment
-    )
-  );
+  const assignmentIndex = assignments.findIndex(assignment => assignment.id === assignmentId);
+  if (assignmentIndex !== -1) {
+    assignments[assignmentIndex] = {
+      ...assignments[assignmentIndex],
+      status: 'submitted' as const,
+      submissionDate
+    };
+  }
 }
 
 export function gradeAssignment(assignmentId: string, score: number, feedback: string) {
-  assignments.update(assignmentList => 
-    assignmentList.map(assignment => 
-      assignment.id === assignmentId 
-        ? { ...assignment, status: 'graded' as const, score, feedback }
-        : assignment
-    )
-  );
+  const assignmentIndex = assignments.findIndex(assignment => assignment.id === assignmentId);
+  if (assignmentIndex !== -1) {
+    assignments[assignmentIndex] = {
+      ...assignments[assignmentIndex],
+      status: 'graded' as const,
+      score,
+      feedback
+    };
+  }
 }
 
 export function addAssignment(assignment: Assignment) {
-  assignments.update(assignmentList => [...assignmentList, assignment]);
+  assignments.push(assignment);
 }
 
 export function updateAssignment(assignmentId: string, updates: Partial<Assignment>) {
-  assignments.update(assignmentList => 
-    assignmentList.map(assignment => 
-      assignment.id === assignmentId 
-        ? { ...assignment, ...updates }
-        : assignment
-    )
-  );
+  const assignmentIndex = assignments.findIndex(assignment => assignment.id === assignmentId);
+  if (assignmentIndex !== -1) {
+    assignments[assignmentIndex] = {
+      ...assignments[assignmentIndex],
+      ...updates
+    };
+  }
 }

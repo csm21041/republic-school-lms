@@ -1,5 +1,3 @@
-import { writable } from 'svelte/store';
-
 export interface AttendanceRecord {
   id: string;
   lectureId: string;
@@ -107,8 +105,8 @@ const initialAttendanceSummaries: AttendanceSummary[] = [
   }
 ];
 
-export const attendanceRecords = writable<AttendanceRecord[]>(initialAttendanceRecords);
-export const attendanceSummaries = writable<AttendanceSummary[]>(initialAttendanceSummaries);
+export const attendanceRecords = $state<AttendanceRecord[]>(initialAttendanceRecords);
+export const attendanceSummaries = $state<AttendanceSummary[]>(initialAttendanceSummaries);
 
 // Helper functions
 export function markAttendance(lectureId: string, status: AttendanceRecord['status'], checkInTime?: string, notes?: string) {
@@ -125,18 +123,18 @@ export function markAttendance(lectureId: string, status: AttendanceRecord['stat
     notes
   };
 
-  attendanceRecords.update(records => [...records, newRecord]);
+  attendanceRecords.push(newRecord);
   updateAttendanceSummary(newRecord.courseId);
 }
 
 export function updateAttendanceRecord(recordId: string, updates: Partial<AttendanceRecord>) {
-  attendanceRecords.update(records => 
-    records.map(record => 
-      record.id === recordId 
-        ? { ...record, ...updates }
-        : record
-    )
-  );
+  const recordIndex = attendanceRecords.findIndex(record => record.id === recordId);
+  if (recordIndex !== -1) {
+    attendanceRecords[recordIndex] = {
+      ...attendanceRecords[recordIndex],
+      ...updates
+    };
+  }
 }
 
 function updateAttendanceSummary(courseId: string) {
@@ -145,13 +143,9 @@ function updateAttendanceSummary(courseId: string) {
 }
 
 export function getAttendanceForCourse(courseId: string) {
-  return attendanceRecords.subscribe(records => 
-    records.filter(record => record.courseId === courseId)
-  );
+  return attendanceRecords.filter(record => record.courseId === courseId);
 }
 
 export function getAttendanceSummaryForCourse(courseId: string) {
-  return attendanceSummaries.subscribe(summaries => 
-    summaries.find(summary => summary.courseId === courseId)
-  );
+  return attendanceSummaries.find(summary => summary.courseId === courseId);
 }

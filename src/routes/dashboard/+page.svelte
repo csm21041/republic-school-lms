@@ -42,7 +42,7 @@
 
   // Get upcoming lectures for the current user using runes
   let upcomingLectures = $derived(
-    lectures.value
+    lectures
       .filter(lecture => {
         const lectureDate = new Date(lecture.date);
         const today = new Date();
@@ -55,7 +55,7 @@
   // Combine assignments and lectures for upcoming deadlines using runes
   let upcomingDeadlines = $derived(
     [
-      ...assignments.value
+      ...assignments
         .filter(assignment => assignment.status === 'pending')
         .map(assignment => ({
           title: assignment.title,
@@ -72,14 +72,14 @@
     ].sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).slice(0, 4)
   );
 
-  let enrolledCourses = $derived(courses.value.filter(course => course.isEnrolled));
-  let pendingAssignments = $derived(assignments.value.filter(assignment => assignment.status === 'pending'));
+  let enrolledCourses = $derived(courses.filter(course => course.isEnrolled));
+  let pendingAssignments = $derived(assignments.filter(assignment => assignment.status === 'pending'));
   let overallAttendance = $derived(
-    attendanceSummaries.value.length > 0 
-      ? Math.round(attendanceSummaries.value.reduce((sum, summary) => sum + summary.attendancePercentage, 0) / attendanceSummaries.value.length)
+    attendanceSummaries.length > 0 
+      ? Math.round(attendanceSummaries.reduce((sum, summary) => sum + summary.attendancePercentage, 0) / attendanceSummaries.length)
       : 0
   );
-  let recentGrades = $derived(gradeEntries.value.slice(0, 3));
+  let recentGrades = $derived(gradeEntries.slice(0, 3));
   let averageProgress = $derived(
     enrolledCourses.length > 0 
       ? Math.round(enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length)
@@ -94,13 +94,13 @@
 <div class="p-6 space-y-6">
   <!-- Welcome Header -->
   <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
-    <h1 class="text-2xl font-bold mb-2">Welcome back, {currentUser.value?.name || 'Student'}!</h1>
+    <h1 class="text-2xl font-bold mb-2">Welcome back, {currentUser?.name || 'Student'}!</h1>
     <p class="text-primary-100">Ready to continue your journalism journey? Let's see what's new today.</p>
-    {#if currentUser.value}
+    {#if currentUser}
       <div class="mt-3 text-sm text-primary-100">
-        <span class="font-medium">{currentUser.value.department}</span> • 
-        <span>{currentUser.value.semester} {currentUser.value.academicYear}</span> • 
-        <span>ID: {currentUser.value.studentId}</span>
+        <span class="font-medium">{currentUser.department}</span> • 
+        <span>{currentUser.semester} {currentUser.academicYear}</span> • 
+        <span>ID: {currentUser.studentId}</span>
       </div>
     {/if}
   </div>

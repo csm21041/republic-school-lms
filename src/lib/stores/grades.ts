@@ -1,5 +1,3 @@
-import { writable } from 'svelte/store';
-
 export interface GradeEntry {
   id: string;
   assignmentId: string;
@@ -182,35 +180,31 @@ const initialCourseGradeSummaries: CourseGradeSummary[] = [
   }
 ];
 
-export const gradeEntries = writable<GradeEntry[]>(initialGradeEntries);
-export const courseGradeSummaries = writable<CourseGradeSummary[]>(initialCourseGradeSummaries);
+export const gradeEntries = $state<GradeEntry[]>(initialGradeEntries);
+export const courseGradeSummaries = $state<CourseGradeSummary[]>(initialCourseGradeSummaries);
 
 // Helper functions
 export function addGrade(grade: GradeEntry) {
-  gradeEntries.update(grades => [...grades, grade]);
+  gradeEntries.push(grade);
   updateCourseGradeSummary(grade.courseId);
 }
 
 export function updateGrade(gradeId: string, updates: Partial<GradeEntry>) {
-  gradeEntries.update(grades => 
-    grades.map(grade => 
-      grade.id === gradeId 
-        ? { ...grade, ...updates }
-        : grade
-    )
-  );
+  const gradeIndex = gradeEntries.findIndex(grade => grade.id === gradeId);
+  if (gradeIndex !== -1) {
+    gradeEntries[gradeIndex] = {
+      ...gradeEntries[gradeIndex],
+      ...updates
+    };
+  }
 }
 
 export function getGradesForCourse(courseId: string) {
-  return gradeEntries.subscribe(grades => 
-    grades.filter(grade => grade.courseId === courseId)
-  );
+  return gradeEntries.filter(grade => grade.courseId === courseId);
 }
 
 export function getCourseGradeSummary(courseId: string) {
-  return courseGradeSummaries.subscribe(summaries => 
-    summaries.find(summary => summary.courseId === courseId)
-  );
+  return courseGradeSummaries.find(summary => summary.courseId === courseId);
 }
 
 function updateCourseGradeSummary(courseId: string) {
