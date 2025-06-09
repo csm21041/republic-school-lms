@@ -146,12 +146,55 @@
     const savedProfile = localStorage.getItem('profileData');
     if (savedProfile) {
       try {
-        profileData = { ...profileData, ...JSON.parse(savedProfile) };
+        const parsed = JSON.parse(savedProfile);
+        profileData = { ...profileData, ...parsed };
+        
+        // Update user data if profile data exists
+        if (parsed.firstName && parsed.lastName) {
+          const updatedUser = {
+            ...$currentUser,
+            name: `${parsed.firstName} ${parsed.lastName}`,
+            email: parsed.email || $currentUser?.email,
+            phone: parsed.phone || $currentUser?.phone,
+            bio: parsed.bio || $currentUser?.bio
+          };
+          currentUser.set(updatedUser);
+        }
       } catch (error) {
         console.error('Error loading profile data:', error);
       }
     }
   }
+
+  // Calculate profile completion percentage
+  function calculateProfileCompletion() {
+    const requiredFields = [
+      profileData.firstName,
+      profileData.lastName,
+      profileData.email,
+      profileData.phone,
+      profileData.dateOfBirth,
+      profileData.gender,
+      profileData.currentAddress.street,
+      profileData.currentAddress.city,
+      profileData.currentAddress.state,
+      profileData.currentAddress.pincode,
+      profileData.education.tenthBoard,
+      profileData.education.tenthPercentage,
+      profileData.education.tenthYear,
+      profileData.education.twelfthBoard,
+      profileData.education.twelfthPercentage,
+      profileData.education.twelfthYear,
+      profileData.emergencyContact.name,
+      profileData.emergencyContact.relationship,
+      profileData.emergencyContact.phone
+    ];
+    
+    const filledFields = requiredFields.filter(field => field && field.toString().trim() !== '').length;
+    return Math.round((filledFields / requiredFields.length) * 100);
+  }
+
+  $: profileCompletion = calculateProfileCompletion();
 
   const states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
@@ -165,6 +208,90 @@
     'Hindi', 'English', 'Bengali', 'Telugu', 'Marathi', 'Tamil', 'Gujarati', 'Urdu', 
     'Kannada', 'Odia', 'Malayalam', 'Punjabi', 'Assamese', 'Maithili', 'Sanskrit'
   ];
+
+  // Sample data for demonstration
+  function loadSampleData() {
+    profileData = {
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      email: 'sarah.johnson@email.com',
+      phone: '+91 9876543210',
+      whatsapp: '+91 9876543210',
+      dateOfBirth: '1995-06-15',
+      gender: 'female',
+      
+      currentAddress: {
+        street: '123, Green Park Extension',
+        city: 'New Delhi',
+        state: 'Delhi',
+        pincode: '110016',
+        country: 'India'
+      },
+      permanentAddress: {
+        street: '456, Model Town',
+        city: 'Chandigarh',
+        state: 'Punjab',
+        pincode: '160022',
+        country: 'India'
+      },
+      sameAsCurrent: false,
+      
+      education: {
+        tenthBoard: 'CBSE',
+        tenthPercentage: '92%',
+        tenthYear: '2011',
+        twelfthBoard: 'CBSE',
+        twelfthPercentage: '89%',
+        twelfthYear: '2013',
+        graduationUniversity: 'Delhi University',
+        graduationDegree: 'Bachelor of Arts (English)',
+        graduationPercentage: '85%',
+        graduationYear: '2016',
+        postGraduationUniversity: 'Jamia Millia Islamia',
+        postGraduationDegree: 'Master of Arts (Mass Communication)',
+        postGraduationPercentage: '88%',
+        postGraduationYear: '2018'
+      },
+      
+      workExperience: '3-5',
+      currentEmployment: 'employed',
+      organization: 'Digital Media Solutions',
+      designation: 'Content Writer',
+      workExperienceYears: '4',
+      
+      courseInterest: 'digital-journalism',
+      learningGoals: 'To enhance my digital journalism skills and learn advanced reporting techniques for online media platforms.',
+      preferredSchedule: 'evening',
+      technicalSkills: 'Adobe Photoshop, Video Editing (Premiere Pro), WordPress, Social Media Management, SEO Writing',
+      
+      languagesKnown: ['Hindi', 'English', 'Punjabi'],
+      hobbies: 'Reading, Photography, Traveling, Writing blogs, Watching documentaries',
+      achievements: 'Best Content Writer Award 2022, Published articles in leading magazines, Completed Google Analytics certification',
+      
+      references: {
+        name: 'Dr. Priya Sharma',
+        relationship: 'Former Professor',
+        phone: '+91 9876543211',
+        email: 'priya.sharma@jmi.ac.in'
+      },
+      
+      emergencyContact: {
+        name: 'Rajesh Johnson',
+        relationship: 'Father',
+        phone: '+91 9876543212',
+        email: 'rajesh.johnson@email.com'
+      },
+      
+      documents: {
+        photo: null,
+        tenthCertificate: null,
+        twelfthCertificate: null,
+        graduationCertificate: null,
+        experienceLetter: null,
+        idProof: null
+      }
+    };
+  }
 </script>
 
 <Layout>
@@ -221,6 +348,20 @@
               <X class="w-4 h-4" />
               <span>Cancel</span>
             </button>
+          {:else if profileCompletion < 100}
+            <button 
+              on:click={loadSampleData}
+              class="btn btn-secondary flex items-center space-x-2 mr-2"
+            >
+              <span>Load Sample Data</span>
+            </button>
+            <button 
+              on:click={toggleEdit}
+              class="btn btn-primary flex items-center space-x-2"
+            >
+              <Edit class="w-4 h-4" />
+              <span>Edit Profile</span>
+            </button>
           {:else}
             <button 
               on:click={toggleEdit}
@@ -232,6 +373,25 @@
           {/if}
         </div>
       </div>
+      
+      <!-- Profile Completion Progress -->
+      {#if profileCompletion < 100}
+        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-blue-900">Profile Completion</span>
+            <span class="text-sm font-bold text-blue-700">{profileCompletion}%</span>
+          </div>
+          <div class="w-full bg-blue-200 rounded-full h-2">
+            <div 
+              class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style="width: {profileCompletion}%"
+            ></div>
+          </div>
+          <p class="text-sm text-blue-700 mt-2">
+            Complete your profile to unlock all features and get personalized recommendations.
+          </p>
+        </div>
+      {/if}
     </div>
 
     {#if isEditing}
@@ -918,16 +1078,102 @@
         </div>
       </div>
 
-      <!-- Profile Completion Status -->
-      <div class="card p-6">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">Profile Completion</h2>
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p class="text-yellow-800">
-            Complete your profile to get the most out of your learning experience. 
-            Click "Edit Profile" to add your educational background, contact information, and more.
-          </p>
+      {#if profileCompletion >= 100}
+        <!-- Completed Profile Information -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Personal Information -->
+          <div class="card p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Personal Information</h2>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-gray-600">Full Name:</span>
+                <span class="font-medium">{profileData.firstName} {profileData.lastName}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Email:</span>
+                <span class="font-medium">{profileData.email}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Phone:</span>
+                <span class="font-medium">{profileData.phone}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Date of Birth:</span>
+                <span class="font-medium">{new Date(profileData.dateOfBirth).toLocaleDateString()}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Gender:</span>
+                <span class="font-medium capitalize">{profileData.gender}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Address Information -->
+          <div class="card p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Address Information</h2>
+            <div class="space-y-4">
+              <div>
+                <h3 class="font-semibold text-gray-800 mb-2">Current Address</h3>
+                <p class="text-gray-600 text-sm">
+                  {profileData.currentAddress.street}<br>
+                  {profileData.currentAddress.city}, {profileData.currentAddress.state}<br>
+                  {profileData.currentAddress.pincode}, {profileData.currentAddress.country}
+                </p>
+              </div>
+              {#if !profileData.sameAsCurrent}
+                <div>
+                  <h3 class="font-semibold text-gray-800 mb-2">Permanent Address</h3>
+                  <p class="text-gray-600 text-sm">
+                    {profileData.permanentAddress.street}<br>
+                    {profileData.permanentAddress.city}, {profileData.permanentAddress.state}<br>
+                    {profileData.permanentAddress.pincode}, {profileData.permanentAddress.country}
+                  </p>
+                </div>
+              {/if}
+            </div>
+          </div>
+
+          <!-- Educational Background -->
+          <div class="card p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Educational Background</h2>
+            <div class="space-y-4">
+              <div>
+                <h3 class="font-semibold text-gray-800">10th Standard</h3>
+                <p class="text-gray-600 text-sm">{profileData.education.tenthBoard} - {profileData.education.tenthPercentage} ({profileData.education.tenthYear})</p>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-800">12th Standard</h3>
+                <p class="text-gray-600 text-sm">{profileData.education.twelfthBoard} - {profileData.education.twelfthPercentage} ({profileData.education.twelfthYear})</p>
+              </div>
+              {#if profileData.education.graduationDegree}
+                <div>
+                  <h3 class="font-semibold text-gray-800">Graduation</h3>
+                  <p class="text-gray-600 text-sm">{profileData.education.graduationDegree} from {profileData.education.graduationUniversity}</p>
+                  <p class="text-gray-600 text-sm">{profileData.education.graduationPercentage} ({profileData.education.graduationYear})</p>
+                </div>
+              {/if}
+              {#if profileData.education.postGraduationDegree}
+                <div>
+                  <h3 class="font-semibold text-gray-800">Post Graduation</h3>
+                  <p class="text-gray-600 text-sm">{profileData.education.postGraduationDegree} from {profileData.education.postGraduationUniversity}</p>
+                  <p class="text-gray-600 text-sm">{profileData.education.postGraduationPercentage} ({profileData.education.postGraduationYear})</p>
+                </div>
+              {/if}
+            </div>
+          </div>
         </div>
-      </div>
+      {:else}
+        <!-- Profile Completion Status -->
+        <div class="card p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Profile Completion</h2>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p class="text-yellow-800">
+              Complete your profile to get the most out of your learning experience. 
+              Click "Edit Profile" to add your educational background, contact information, and more.
+            </p>
+          </div>
+        </div>
+      {/if}
     {/if}
   </div>
 </Layout>
