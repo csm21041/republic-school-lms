@@ -1,4 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
+import { mockAPI, makeAPICall } from './mockService';
 import type { User } from '$lib/stores/auth';
 
 export interface LoginRequest {
@@ -40,11 +41,15 @@ class AuthAPI {
   // Send OTP to user's email
   async sendOTP(email: string): Promise<ApiResponse<OTPResponse>> {
     try {
-      const response = await apiClient.post<ApiResponse<OTPResponse>>('/auth/send-otp', {
-        email: email.toLowerCase().trim()
-      }, false);
-      
-      return response;
+      return await makeAPICall(
+        '/auth/send-otp',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.toLowerCase().trim() })
+        },
+        () => mockAPI.sendOTP(email)
+      );
     } catch (error: any) {
       console.error('Send OTP error:', error);
       throw error;
@@ -54,18 +59,15 @@ class AuthAPI {
   // Verify OTP and login
   async verifyOTP(request: VerifyOTPRequest): Promise<ApiResponse<LoginResponse>> {
     try {
-      // Add device information
-      const deviceInfo = {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        language: navigator.language,
-        ...request.deviceInfo
-      };
-
-      const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/verify-otp', {
-        ...request,
-        deviceInfo
-      }, false);
+      const response = await makeAPICall(
+        '/auth/verify-otp',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(request)
+        },
+        () => mockAPI.verifyOTP(request.email, request.otp)
+      );
 
       // Store tokens if login successful
       if (response.success && response.data) {
@@ -84,14 +86,15 @@ class AuthAPI {
   // Refresh access token
   async refreshToken(): Promise<ApiResponse<{ token: string; expiresIn: number }>> {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await apiClient.post<ApiResponse<{ token: string; expiresIn: number }>>('/auth/refresh', {
-        refreshToken
-      }, false);
+      const response = await makeAPICall(
+        '/auth/refresh',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: localStorage.getItem('refresh_token') })
+        },
+        () => mockAPI.refreshToken()
+      );
 
       // Update stored token
       if (response.success && response.data) {
@@ -113,11 +116,15 @@ class AuthAPI {
   // Logout user
   async logout(): Promise<ApiResponse<{ message: string }>> {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      
-      const response = await apiClient.post<ApiResponse<{ message: string }>>('/auth/logout', {
-        refreshToken
-      });
+      const response = await makeAPICall(
+        '/auth/logout',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: localStorage.getItem('refresh_token') })
+        },
+        () => mockAPI.logout()
+      );
 
       // Clear all stored tokens
       localStorage.removeItem('auth_token');
@@ -142,8 +149,14 @@ class AuthAPI {
   // Get current user profile
   async getCurrentUser(): Promise<ApiResponse<User>> {
     try {
-      const response = await apiClient.get<ApiResponse<User>>('/auth/me');
-      return response;
+      return await makeAPICall(
+        '/auth/me',
+        {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        },
+        () => mockAPI.getCurrentUser()
+      );
     } catch (error: any) {
       console.error('Get current user error:', error);
       throw error;

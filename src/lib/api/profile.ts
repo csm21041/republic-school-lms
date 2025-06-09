@@ -1,4 +1,5 @@
 import { apiClient, type ApiResponse } from './client';
+import { mockAPI, makeAPICall } from './mockService';
 import type { User } from '$lib/stores/auth';
 
 export interface ProfileUpdateRequest {
@@ -119,8 +120,14 @@ class ProfileAPI {
   // Get complete profile data
   async getProfile(): Promise<ApiResponse<ProfileResponse>> {
     try {
-      const response = await apiClient.get<ApiResponse<ProfileResponse>>('/profile');
-      return response;
+      return await makeAPICall(
+        '/profile',
+        {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        },
+        () => mockAPI.getProfile()
+      );
     } catch (error: any) {
       console.error('Get profile error:', error);
       throw error;
@@ -133,8 +140,18 @@ class ProfileAPI {
       // Validate required fields before sending
       this.validateProfileData(data);
 
-      const response = await apiClient.put<ApiResponse<ProfileResponse>>('/profile', data);
-      return response;
+      return await makeAPICall(
+        '/profile',
+        {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          },
+          body: JSON.stringify(data)
+        },
+        () => mockAPI.updateProfile(data)
+      );
     } catch (error: any) {
       console.error('Update profile error:', error);
       throw error;
@@ -159,8 +176,19 @@ class ProfileAPI {
       // Validate file
       this.validateAvatarFile(file);
 
-      const response = await apiClient.uploadFile<ApiResponse<AvatarUploadResponse>>('/profile/avatar', file);
-      return response;
+      return await makeAPICall(
+        '/profile/avatar',
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+          body: (() => {
+            const formData = new FormData();
+            formData.append('file', file);
+            return formData;
+          })()
+        },
+        () => mockAPI.uploadAvatar(file)
+      );
     } catch (error: any) {
       console.error('Upload avatar error:', error);
       throw error;

@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { currentUser, isAuthenticated, initializeAuth } from '$lib/stores/auth';
+  import { initializeNavigation, loadNavigationState } from '$lib/stores/navigation';
   import Navbar from '$lib/components/Navbar.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import '../app.css';
@@ -19,6 +20,10 @@
   }
 
   onMount(() => {
+    // Initialize navigation system
+    initializeNavigation();
+    loadNavigationState();
+    
     // Initialize authentication state
     initializeAuth();
     
