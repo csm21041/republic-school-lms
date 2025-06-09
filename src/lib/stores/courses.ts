@@ -1,202 +1,220 @@
 import { writable } from 'svelte/store';
+import type { Lecture } from './lectures';
 
 export interface Course {
   id: string;
   title: string;
   description: string;
   instructor: string;
+  instructorAvatar: string;
+  duration: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  category: string;
+  department: string;
+  semester: string;
+  academicYear: string;
   courseCode: string;
   credits: number;
-  duration: string;
-  level: string;
-  category: string;
   thumbnail: string;
-  isEnrolled: boolean;
-  progress: number;
-  totalLessons: number;
-  completedLessons: number;
+  price: number;
   rating: number;
-  totalStudents: number;
-  startDate: string;
-  endDate: string;
-  schedule: string;
-  prerequisites: string[];
-  learningOutcomes: string[];
-  syllabus: {
-    week: number;
-    topic: string;
-    description: string;
-  }[];
+  studentsEnrolled: number;
+  lessons: Lesson[];
+  lectures: string[]; // Array of lecture IDs
+  syllabus: string[];
+  progress?: number;
+  isEnrolled?: boolean;
+  completionDate?: string;
+  schedule?: {
+    days: string[];
+    time: string;
+    venue: string;
+  };
 }
 
-const initialCourses: Course[] = [
+export interface Lesson {
+  id: string;
+  title: string;
+  duration: string;
+  type: 'video' | 'reading' | 'quiz' | 'assignment';
+  videoUrl?: string;
+  content?: string;
+  isCompleted?: boolean;
+  resources?: Resource[];
+}
+
+export interface Resource {
+  id: string;
+  title: string;
+  type: 'pdf' | 'doc' | 'link' | 'video';
+  url: string;
+  size?: string;
+}
+
+const mockCourses: Course[] = [
   {
     id: '1',
     title: 'Digital Journalism Fundamentals',
-    description: 'Master the basics of digital journalism including online reporting, multimedia storytelling, and digital ethics.',
+    description: 'Master the basics of digital journalism, from research to publication in the digital age.',
     instructor: 'Dr. Michael Chen',
-    courseCode: 'DJ101',
-    credits: 4,
-    duration: '12 weeks',
+    instructorAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+    duration: '8 weeks',
     level: 'Beginner',
     category: 'Digital Media',
-    thumbnail: 'https://images.pexels.com/photos/4050315/pexels-photo-4050315.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&dpr=1',
-    isEnrolled: true,
-    progress: 65,
-    totalLessons: 24,
-    completedLessons: 16,
+    department: 'Journalism',
+    semester: 'Spring',
+    academicYear: '2024',
+    courseCode: 'JOUR 101',
+    credits: 3,
+    thumbnail: 'https://images.pexels.com/photos/97080/pexels-photo-97080.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&dpr=1',
+    price: 299,
     rating: 4.8,
-    totalStudents: 156,
-    startDate: '2024-01-15',
-    endDate: '2024-04-15',
-    schedule: 'Mon, Wed, Fri - 10:00 AM',
-    prerequisites: ['Basic Computer Skills', 'English Proficiency'],
-    learningOutcomes: [
-      'Understand digital journalism principles',
-      'Create multimedia content',
-      'Apply ethical standards in digital reporting',
-      'Use digital tools for research and verification'
+    studentsEnrolled: 1247,
+    progress: 65,
+    isEnrolled: true,
+    lectures: ['1', '2'],
+    schedule: {
+      days: ['Monday', 'Wednesday'],
+      time: '09:00-10:30',
+      venue: 'Room 101, Media Building'
+    },
+    lessons: [
+      {
+        id: '1',
+        title: 'Introduction to Digital Journalism',
+        duration: '45 min',
+        type: 'video',
+        videoUrl: 'https://example.com/video1',
+        isCompleted: true,
+        resources: [
+          {
+            id: '1',
+            title: 'Course Syllabus',
+            type: 'pdf',
+            url: '/resources/syllabus.pdf',
+            size: '2.3 MB'
+          }
+        ]
+      },
+      {
+        id: '2',
+        title: 'Research Techniques',
+        duration: '60 min',
+        type: 'video',
+        videoUrl: 'https://example.com/video2',
+        isCompleted: true
+      },
+      {
+        id: '3',
+        title: 'Writing for Digital Platforms',
+        duration: '50 min',
+        type: 'video',
+        videoUrl: 'https://example.com/video3',
+        isCompleted: false
+      }
     ],
     syllabus: [
-      { week: 1, topic: 'Introduction to Digital Journalism', description: 'Overview of digital media landscape' },
-      { week: 2, topic: 'Online Research Techniques', description: 'Advanced search strategies and source verification' },
-      { week: 3, topic: 'Multimedia Storytelling', description: 'Combining text, images, audio, and video' },
-      { week: 4, topic: 'Social Media Journalism', description: 'Reporting and verification on social platforms' }
+      'Introduction to Digital Journalism',
+      'Research and Fact-Checking',
+      'Writing for Digital Platforms',
+      'Multimedia Storytelling',
+      'Social Media Integration',
+      'Ethics in Digital Journalism',
+      'SEO for Journalists',
+      'Final Project'
     ]
   },
   {
     id: '2',
     title: 'Investigative Reporting Masterclass',
-    description: 'Advanced techniques for investigative journalism, including data analysis, source protection, and long-form storytelling.',
+    description: 'Advanced techniques for investigative journalism, including data analysis and source protection.',
     instructor: 'Sarah Williams',
-    courseCode: 'IR201',
-    credits: 6,
-    duration: '16 weeks',
+    instructorAvatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+    duration: '12 weeks',
     level: 'Advanced',
     category: 'Investigative',
+    department: 'Journalism',
+    semester: 'Spring',
+    academicYear: '2024',
+    courseCode: 'JOUR 401',
+    credits: 4,
     thumbnail: 'https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&dpr=1',
-    isEnrolled: true,
-    progress: 30,
-    totalLessons: 32,
-    completedLessons: 10,
+    price: 599,
     rating: 4.9,
-    totalStudents: 89,
-    startDate: '2024-02-01',
-    endDate: '2024-05-30',
-    schedule: 'Tue, Thu - 2:00 PM',
-    prerequisites: ['Basic Journalism', 'Research Methods'],
-    learningOutcomes: [
-      'Conduct in-depth investigations',
-      'Analyze complex data sets',
-      'Protect sources and maintain confidentiality',
-      'Write compelling long-form narratives'
+    studentsEnrolled: 543,
+    progress: 30,
+    isEnrolled: true,
+    lectures: ['3'],
+    schedule: {
+      days: ['Tuesday', 'Thursday'],
+      time: '14:00-16:00',
+      venue: 'Room 205, Media Building'
+    },
+    lessons: [
+      {
+        id: '1',
+        title: 'Investigative Methodology',
+        duration: '75 min',
+        type: 'video',
+        isCompleted: true
+      },
+      {
+        id: '2',
+        title: 'Source Protection',
+        duration: '60 min',
+        type: 'video',
+        isCompleted: false
+      }
     ],
     syllabus: [
-      { week: 1, topic: 'Investigation Planning', description: 'Developing investigation strategies' },
-      { week: 2, topic: 'Data Journalism', description: 'Working with databases and statistics' },
-      { week: 3, topic: 'Source Development', description: 'Building and maintaining source networks' },
-      { week: 4, topic: 'Legal Considerations', description: 'Understanding media law and ethics' }
+      'Investigative Methodology',
+      'Source Development and Protection',
+      'Data Analysis Techniques',
+      'Legal Considerations',
+      'Digital Security',
+      'Interview Techniques',
+      'Story Structure',
+      'Publication Ethics'
     ]
   },
   {
     id: '3',
     title: 'Broadcast Journalism Essentials',
-    description: 'Learn the fundamentals of television and radio journalism, including on-camera presentation and audio production.',
+    description: 'Learn the fundamentals of television and radio journalism, from scriptwriting to on-air presentation.',
     instructor: 'James Rodriguez',
-    courseCode: 'BJ101',
-    credits: 5,
-    duration: '14 weeks',
+    instructorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+    duration: '10 weeks',
     level: 'Intermediate',
     category: 'Broadcast',
+    department: 'Journalism',
+    semester: 'Spring',
+    academicYear: '2024',
+    courseCode: 'JOUR 301',
+    credits: 3,
     thumbnail: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&dpr=1',
-    isEnrolled: false,
-    progress: 0,
-    totalLessons: 28,
-    completedLessons: 0,
+    price: 449,
     rating: 4.7,
-    totalStudents: 124,
-    startDate: '2024-03-01',
-    endDate: '2024-06-15',
-    schedule: 'Mon, Wed - 3:00 PM',
-    prerequisites: ['Communication Skills', 'Basic Journalism'],
-    learningOutcomes: [
-      'Master on-camera presentation',
-      'Understand broadcast production workflow',
-      'Develop interviewing skills for broadcast',
-      'Learn audio and video editing basics'
-    ],
-    syllabus: [
-      { week: 1, topic: 'Broadcast Fundamentals', description: 'Understanding TV and radio formats' },
-      { week: 2, topic: 'On-Camera Techniques', description: 'Presentation and delivery skills' },
-      { week: 3, topic: 'Interview Skills', description: 'Conducting effective broadcast interviews' },
-      { week: 4, topic: 'Production Basics', description: 'Technical aspects of broadcast production' }
-    ]
-  },
-  {
-    id: '4',
-    title: 'Data Journalism and Visualization',
-    description: 'Learn to find, analyze, and visualize data to tell compelling stories through charts, maps, and interactive graphics.',
-    instructor: 'Dr. Emily Zhang',
-    courseCode: 'DJ301',
-    credits: 4,
-    duration: '10 weeks',
-    level: 'Advanced',
-    category: 'Data',
-    thumbnail: 'https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&dpr=1',
+    studentsEnrolled: 892,
     isEnrolled: false,
-    progress: 0,
-    totalLessons: 20,
-    completedLessons: 0,
-    rating: 4.6,
-    totalStudents: 67,
-    startDate: '2024-04-01',
-    endDate: '2024-06-10',
-    schedule: 'Fri - 1:00 PM',
-    prerequisites: ['Statistics Basics', 'Excel Proficiency'],
-    learningOutcomes: [
-      'Extract insights from complex datasets',
-      'Create compelling data visualizations',
-      'Use data journalism tools and software',
-      'Apply statistical analysis to reporting'
-    ],
+    lectures: [],
+    schedule: {
+      days: ['Monday', 'Wednesday', 'Friday'],
+      time: '11:00-12:00',
+      venue: 'Studio A, Media Building'
+    },
+    lessons: [],
     syllabus: [
-      { week: 1, topic: 'Data Sources and Collection', description: 'Finding and gathering reliable data' },
-      { week: 2, topic: 'Data Cleaning and Analysis', description: 'Preparing data for analysis' },
-      { week: 3, topic: 'Visualization Principles', description: 'Creating effective charts and graphs' },
-      { week: 4, topic: 'Interactive Graphics', description: 'Building engaging data presentations' }
+      'Broadcast Writing Fundamentals',
+      'Voice and Delivery',
+      'Camera Presence',
+      'Interview Techniques',
+      'Live Reporting',
+      'News Production',
+      'Ethics in Broadcasting',
+      'Career Development'
     ]
   }
 ];
 
-export const courses = writable<Course[]>(initialCourses);
-
-// Helper functions
-export function enrollInCourse(courseId: string) {
-  courses.update(courseList => 
-    courseList.map(course => 
-      course.id === courseId 
-        ? { ...course, isEnrolled: true }
-        : course
-    )
-  );
-}
-
-export function unenrollFromCourse(courseId: string) {
-  courses.update(courseList => 
-    courseList.map(course => 
-      course.id === courseId 
-        ? { ...course, isEnrolled: false, progress: 0, completedLessons: 0 }
-        : course
-    )
-  );
-}
-
-export function updateCourseProgress(courseId: string, progress: number, completedLessons: number) {
-  courses.update(courseList => 
-    courseList.map(course => 
-      course.id === courseId 
-        ? { ...course, progress, completedLessons }
-        : course
-    )
-  );
-}
+export const courses = writable<Course[]>(mockCourses);
+export const selectedCourse = writable<Course | null>(null);
