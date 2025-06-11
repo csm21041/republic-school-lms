@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronLeft, ChevronRight, Download, Print } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight, Download, Printer as Print } from 'lucide-svelte';
   
   let currentDate = new Date();
   let currentMonth = currentDate.getMonth();
