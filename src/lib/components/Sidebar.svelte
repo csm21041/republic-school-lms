@@ -31,7 +31,7 @@
     { id: 'nav-lectures', href: '/lectures', label: 'Lectures', icon: Users },
     { id: 'nav-attendance', href: '/attendance', label: 'Attendance', icon: CheckSquare },
     { id: 'nav-grades', href: '/grades', label: 'Grades', icon: BarChart3 },
-    { id: 'nav-calendar', href: '/calendar', label: 'Academic Calendar', icon: Calendar },
+    { id: 'nav-calendar', href: '/calendar', label: 'Calendar', icon: Calendar },
     { id: 'nav-chat', href: '/chat', label: 'Chat', icon: MessageCircle },
     { id: 'nav-doubts', href: '/doubts', label: 'Doubts', icon: HelpCircle },
     { id: 'nav-feedback', href: '/feedback', label: 'Feedback', icon: MessageSquare },
